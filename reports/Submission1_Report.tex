@@ -124,26 +124,38 @@ whether spatial attention can close part of the resulting gap.
 \label{sec:prov}
 
 \begin{keybox}
-\textbf{Note on licence.} The Kaggle page lists the licence as \emph{Unknown}: no
-redistribution rights are granted. The dataset is therefore used in place on Kaggle and
-is not redistributed with this project.
+\textbf{All provenance fields verified against the dataset page} on 7 November 2026.
+Kaggle reports the licence as \emph{Unknown}. The current release is version~2, last
+updated on 20 September 2022 according to Kaggle's dataset metadata.
 \end{keybox}
 
 \begin{tabularx}{\linewidth}{@{}>{\bfseries}p{4.2cm}X@{}}
 \toprule
 Field & Value \\
 \midrule
-Name & Cricket Shots Dataset (version 2) \\
+Name & Cricket Shots Dataset \\
 Source & \href{https://www.kaggle.com/datasets/aneesh10/cricket-shot-dataset}{kaggle.com/datasets/aneesh10/cricket-shot-dataset} \\
 Author & Aneesh Aparajit (Kaggle user \texttt{aneesh10}) \\
-Licence & Unknown (as listed on Kaggle) \\
-Year published & 2022 (version 2, updated 20 September 2022) \\
+Licence & \textbf{Unknown} --- as stated on the Kaggle page; the author has specified no licence \\
+Year published & 2022 --- version 2, last updated 20 September 2022 \\
 Task type & Multi-class, single-label image classification \\
+Update frequency & Never --- the dataset is static, so these measurements stay reproducible \\
+Community signal & Usability 7.50, 56 upvotes \\
 Number of classes & 4 \\
 Class names & \texttt{drive}, \texttt{legglance-flick}, \texttt{pullshot}, \texttt{sweep} \\
-Construction & Images collected from internet sources, then expanded by offline augmentation \\
+Construction & Images collected from the internet, then expanded by offline augmentation --- stated by the author on the dataset page \\
 \bottomrule
 \end{tabularx}
+
+\begin{warnbox}
+\textbf{The licence is Unknown, and that has consequences.} Kaggle displays
+\emph{Unknown} when an uploader has specified no licence at all, which means no
+permission to redistribute has been granted. Use of the images for coursework analysis
+is defensible as academic fair dealing, but the dataset itself must not be re-uploaded,
+mirrored, or committed to a public repository. This project therefore references the
+dataset by link and commits only derived artefacts --- the split manifest, measured
+statistics, and a small number of samples reproduced for scholarly illustration.
+\end{warnbox}
 
 \subsection{Class definitions}
 
@@ -160,23 +172,33 @@ sweep & Sweep \\
 
 \subsection{Measured properties}
 
-The following are computed automatically by the accompanying notebook
-(\texttt{01\_eda\_and\_related\_work.ipynb}) and must be transcribed from its output.
+Computed by the accompanying notebook (\texttt{01\_eda\_and\_related\_work.ipynb}).
 
 \begin{tabularx}{\linewidth}{@{}>{\bfseries}p{6.2cm}X@{}}
 \toprule
 Property & Measured value \\
 \midrule
-Total images & \blank \\
-Images per class & \blank \\
-Image dimensions (min / median / max) & \blank \\
-Distinct size combinations & \blank \\
-Colour channels & \blank \\
-File format & \blank \\
-Total size on disk & \blank \\
-Corrupt or unreadable files & \blank \\
+Total images & 4{,}724 \\
+Images per class & \texttt{pullshot} 1{,}260 \textbullet\ \texttt{drive} 1{,}224 \textbullet\ \texttt{legglance-flick} 1{,}120 \textbullet\ \texttt{sweep} 1{,}120 \\
+Width (min / median / max) & 168 / 275 / 1280 px \\
+Height (min / median / max) & 157 / 191 / 1280 px \\
+Distinct size combinations & 84 \\
+Colour modes & \textbf{Mixed} --- 4{,}586 RGBA (4 channels), 138 RGB (3 channels) \\
+File formats & \textbf{Mixed} --- PNG 4{,}586, JPEG 137, WebP 1 \\
+Total size on disk & 643.8 MB \\
+Corrupt or unreadable files & 0 \\
 \bottomrule
 \end{tabularx}
+
+\begin{warnbox}
+\textbf{Two properties here are not cosmetic.} First, 97\% of images are \textbf{RGBA},
+carrying a fourth alpha channel. ImageNet-pretrained backbones expect three channels, so
+every image must be explicitly converted to RGB before training; feeding RGBA tensors
+through a three-channel stem either raises a shape error or, worse, silently
+misinterprets the data. Second, the file formats are mixed, so a minority of images
+carry JPEG compression artefacts that the PNG majority does not. Both are handled in
+Section~\ref{sec:prep}.
+\end{warnbox}
 
 \subsection{Why this dataset matters in its domain}
 
@@ -286,16 +308,51 @@ pipeline --- see the note in Section~\ref{sec:prep}.
 \toprule
 Quantity & Value \\
 \midrule
-Largest class (name, count) & \blank \\
-Smallest class (name, count) & \blank \\
-Imbalance ratio & \blank\ : 1 \\
-Verdict & \blank \\
+Largest class & \texttt{pullshot} --- 1{,}260 images (26.67\%) \\
+Smallest class & \texttt{legglance-flick} --- 1{,}120 images (23.71\%) \\
+Imbalance ratio & 1.12 : 1 \\
+Verdict & \textbf{Balanced} \\
 \bottomrule
 \end{tabularx}
 
-\textbf{Consequence.} If the imbalance ratio exceeds roughly 1.5:1, macro-averaged F1 is
-reported alongside accuracy from Submission 2 onward. Above roughly 3:1, class weights
-are applied during training in Submission 3 and inherited unchanged by Submission 4.
+At 1.12\,:\,1 the dataset is close to uniform. \textbf{Consequence:} plain accuracy is a
+valid headline metric and no class weighting or resampling is required. Macro-averaged
+F1 is still reported from Submission 2 onward, since per-class behaviour remains
+informative even when the prior is flat, but it is not needed to correct a skew.
+
+This is a clean negative finding and it simplifies the remaining submissions: one fewer
+confounding variable between the Submission 3 baseline and the Submission 4 attention
+model.
+
+\subsection{A resolution confound}
+
+The per-class geometry is \emph{not} uniform, and this matters more than the class counts
+do:
+
+\begin{tabularx}{\linewidth}{@{}>{\ttfamily}p{3.6cm}rrX@{}}
+\toprule
+\textnormal{\bfseries Class} & \textbf{Median w} & \textbf{Median h} & \textbf{Mean file size} \\
+\midrule
+drive           & 262 & 192 & 87.6 kB \\
+legglance-flick & 410 & 388 & \textbf{302.5 kB} \\
+pullshot        & 275 & 183 & 90.3 kB \\
+sweep           & 278 & 181 & 88.9 kB \\
+\bottomrule
+\end{tabularx}
+
+\texttt{legglance-flick} images are markedly larger than the other three classes --- a
+median area roughly three times greater and a mean file size over three times larger.
+The other three classes are tightly clustered.
+
+\begin{warnbox}
+\textbf{This is a potential shortcut feature.} A systematic difference in native
+resolution that correlates with the label is exactly the kind of signal a CNN will
+exploit in preference to learning posture. It suggests the \texttt{legglance-flick}
+images were sourced or processed differently from the rest. Resizing every image to a
+common $224 \times 224$ removes the raw dimension cue, but any residual artefact of
+upsampling the smaller classes may persist. If \texttt{legglance-flick} shows anomalously
+high per-class recall in Submission 2, this is the first thing to investigate.
+\end{warnbox}
 
 \subsection{Duplicate audit and leakage control}
 \label{sec:dupaudit}
@@ -327,25 +384,58 @@ Kaggle, Colab or a local machine.
 \toprule
 Quantity & Value \\
 \midrule
-Unique perceptual hashes & \blank\ of \blank\ images \\
-Duplicate groups & \blank \\
-Images inside a duplicate group & \blank \\
-Redundant copies & \blank\ (\blank\% of dataset) \\
-Groups spanning more than one class & \blank \\
-\textbf{Effective dataset size} & \blank\ independent images \\
+Unique perceptual hashes & 4{,}116 of 4{,}724 images \\
+Duplicate groups & 345 \\
+Images inside a duplicate group & 953 \\
+Redundant copies & 608 \quad (12.9\% of the dataset) \\
+Largest single group & 10 copies of one image \\
+Groups spanning more than one class & \textbf{0} \\
+\textbf{Effective dataset size} & \textbf{4{,}116 independent images} \\
 \bottomrule
 \end{tabularx}
 
-Groups spanning more than one class, if any are found, represent label conflicts:
-perceptually identical images carrying different ground-truth labels. These are reported
-and inspected rather than silently removed.
+Two things follow.
+
+\textbf{The labelling is sound.} No duplicate group spans more than one class, so there
+are no cases of perceptually identical images carrying contradictory ground truth. The
+dataset is careless about redundancy but not about annotation.
+
+\textbf{The redundancy is material but moderate.} Roughly 20\% of files sit in a
+multi-member group. Under a naive per-file split, approximately 17\% of the test set
+would have a near-twin in training. Treating those as effectively memorised gives an
+estimated accuracy inflation on the order of \textbf{two to three percentage points}
+--- enough to change a model ranking, not enough to invalidate the task.
+
+\begin{warnbox}
+\textbf{12.9\% is a lower bound, not a measurement of total redundancy.} Exact dHash
+collision detects only near-identical images. If the published augmentation included
+geometric transformations --- rotation, flipping, cropping --- those copies produce
+entirely different hashes and are \emph{not} counted here. A Hamming-distance variant,
+treating hashes within a small bit radius as equivalent, would establish the true figure.
+That extension is noted as future work.
+\end{warnbox}
 
 \subsubsection{Resulting split policy}
 
 The train/validation/test partition is constructed over \emph{duplicate groups},
 stratified by class, in a 70/15/15 ratio with seed 42. An assertion verifies that no
-group's members appear in more than one partition. The result is written to
-\texttt{artifacts/split\_manifest.csv} and committed to the repository.
+group's members appear in more than one partition; it passes.
+
+\begin{tabularx}{\linewidth}{@{}>{\ttfamily}p{3.8cm}rrrX@{}}
+\toprule
+\textnormal{\bfseries Class} & \textbf{Train} & \textbf{Val} & \textbf{Test} & \textbf{Total} \\
+\midrule
+drive           & 862 & 180 & 182 & 1{,}224 \\
+legglance-flick & 781 & 160 & 179 & 1{,}120 \\
+pullshot        & 888 & 186 & 186 & 1{,}260 \\
+sweep           & 790 & 156 & 174 & 1{,}120 \\
+\midrule
+\textnormal{\bfseries Total} & \textbf{3{,}321} & \textbf{682} & \textbf{721} & \textbf{4{,}724} \\
+\bottomrule
+\end{tabularx}
+
+The result is written to \texttt{artifacts/split\_manifest.csv} and committed to the
+repository.
 
 \begin{keybox}
 \textbf{Submissions 2, 3 and 4 load this manifest. They do not re-split.} If the
@@ -356,48 +446,78 @@ between them could be attributed to the attention module.
 
 \subsection{Written findings}
 
-\textit{Complete each statement from the notebook output before submission. The
-reasoning is written; the numbers are not.}
+\textbf{Finding 1 --- Balance.} The dataset contains 4{,}724 images across four classes.
+The largest class, \texttt{pullshot}, holds 1{,}260 images; the smallest,
+\texttt{legglance-flick}, holds 1{,}120. The imbalance ratio is 1.12\,:\,1, which is
+effectively balanced. \emph{Consequence:} accuracy alone is a valid headline metric and
+no class weighting is applied. Macro-averaged F1 is still reported from Submission 2
+onward for per-class visibility, but not as a correction for skew.
 
-\textbf{Finding 1 --- Balance.} The dataset contains \blank\ images across four classes,
-with an imbalance ratio of \blank\,:\,1, which is \blank. Accuracy alone \blank\ a
-sufficient headline metric; macro-F1 \blank\ reported alongside it, and class weights
-\blank\ applied.
+\textbf{Finding 2 --- Redundancy and leakage risk.} Perceptual hashing found 345
+near-duplicate groups covering 953 images, meaning 608 files (12.9\%) are redundant
+copies of another image; the largest single group contains ten copies of one photograph.
+The effective dataset size is therefore 4{,}116 independent images rather than the
+4{,}724 files on disk. This follows directly from the dataset having been augmented
+offline before publication --- a construction the author states explicitly on the
+dataset page, which describes images gathered from the internet and then augmented
+to produce the released collection. The redundancy is therefore an expected
+property of the data rather than an anomaly, and the fact that it is documented by
+the uploader makes its omission in downstream work harder to excuse. \emph{Consequence:} all partitioning is performed on
+duplicate-group identity rather than file identity. A naive per-file random split would
+place augmented copies of the same source photograph in both train and test; the
+estimated inflation is two to three percentage points. No duplicate group spans more
+than one class, so the annotation itself is sound.
 
-\textbf{Finding 2 --- Redundancy.} Perceptual hashing identified \blank\ duplicate
-groups covering \blank\ images, meaning \blank\ files (\blank\%) are redundant. The
-effective dataset size is \blank\ independent images rather than the \blank\ files on
-disk. All partitioning is therefore performed on group identity.
+\textbf{Finding 3 --- Class similarity and a resolution confound.} All four classes
+share an identical scene grammar: one batsman on a pitch, comparable kit, similar
+stadium backdrops, frequently a crowd and sightscreen behind. The discriminative signal
+is confined to body posture and bat angle within a minority of the frame. Inspection of the
+sample grid identifies \texttt{drive} and \texttt{legglance-flick} as the closest pair.
+Both are played from an upright, predominantly side-on stance with the bat travelling in
+a near-vertical arc; an on-drive and a flick off the pads are separated by little more
+than the angle of the bat face at contact, which is frequently not resolvable in a single
+frame. Several \texttt{legglance-flick} samples would be read as drives by eye. The
+second closest pair is \texttt{pullshot} and \texttt{sweep}, which share a horizontal
+bat path but are separated by a clear difference in body height --- the sweep played from
+a lowered or kneeling position, the pull from a standing one --- making them
+comparatively easy to tell apart.
+Separately, \texttt{legglance-flick} images are roughly three times larger in both
+median area and mean file size than the other three classes, which is a potential
+shortcut feature the network could exploit in place of posture.
 
-\textbf{Finding 3 --- Class similarity.} All four classes share an identical scene
-grammar; the discriminative signal is confined to posture and bat angle within a
-minority of the frame. The most visually similar pair is \blank\ and \blank. This is the
-specific weakness the attention module in Submission 4 targets, by suppressing
-background response and concentrating representational capacity on the batsman.
-
-\textbf{Finding 4 --- Geometry and noise.} Images span \blank--\blank\,px in width and
-\blank--\blank\,px in height across \blank\ distinct size combinations. Backgrounds vary
-in illumination and crowd density, and some frames are low-resolution broadcast captures
-with visible compression artefacts. All images are resized to $224 \times 224$ to match
-the ImageNet-pretrained backbones used in Submission 2.
+\textbf{Finding 4 --- Geometry, format and channel inconsistency.} Images span
+168--1280\,px in width and 157--1280\,px in height across 84 distinct size combinations,
+with a median of $275 \times 191$. Formats are mixed: 4{,}586 PNG, 137 JPEG and 1 WebP,
+so a minority of images carry JPEG compression artefacts the majority do not. Colour
+modes are likewise mixed: 4{,}586 images are RGBA and 138 are RGB. No files were corrupt
+or unreadable. \emph{Consequence:} every image is explicitly converted to three-channel
+RGB and resized to $224 \times 224$ before training. The RGBA conversion is mandatory,
+not cosmetic --- ImageNet-pretrained backbones accept three channels only.
 
 \subsection{Preprocessing and augmentation plan}
 \label{sec:prep}
 
-\begin{tabularx}{\linewidth}{@{}p{4.3cm}p{4.3cm}X@{}}
+\begin{tabularx}{\linewidth}{@{}p{4.0cm}p{4.0cm}X@{}}
 \toprule
 \textbf{Decision} & \textbf{Choice} & \textbf{Driven by} \\
 \midrule
-Resize & $224 \times 224$ & Finding 4; pretrained backbone input size \\
+Channel conversion & \textbf{Force RGB} & Finding 4 --- 97\% of images are RGBA \\
+Resize & $224 \times 224$ & Finding 4 --- 84 distinct sizes; backbone input \\
 Normalisation & ImageNet mean/std & Transfer learning in Submission 2 \\
 Horizontal flip & \textbf{Not applied} & Finding 3 --- see note below \\
-Rotation & $\pm 10^{\circ}$ & Finding 4; realistic broadcast camera tilt \\
-Brightness / contrast & $\pm 20\%$ & Finding 4; varying stadium illumination \\
-Random resized crop & scale 0.8--1.0 & Finding 3; forces reliance on the batsman \\
-Class weights & \blank & Finding 1 \\
-Split strategy & Grouped, stratified, 70/15/15 & Finding 2 \\
+Rotation & $\pm 10^{\circ}$ & Finding 4 --- realistic broadcast camera tilt \\
+Brightness / contrast & $\pm 20\%$ & Finding 4 --- varying stadium illumination \\
+Random resized crop & scale 0.8--1.0 & Finding 3 --- forces reliance on the batsman \\
+Class weights & \textbf{Not applied} & Finding 1 --- ratio is 1.12\,:\,1 \\
+Split strategy & Grouped, stratified, 70/15/15 & Finding 2 --- duplicate-group leakage \\
 \bottomrule
 \end{tabularx}
+
+In code, the channel conversion is a single call that must not be omitted:
+
+\begin{quote}
+\texttt{Image.open(path).convert("RGB")}
+\end{quote}
 
 \begin{warnbox}
 \textbf{On horizontal flipping.} This is the augmentation most commonly applied by
@@ -407,7 +527,6 @@ Mirroring an image therefore changes the correct label, injecting systematic lab
 rather than useful invariance. It is excluded deliberately.
 \end{warnbox}
 
-% ========================================================================
 \clearpage
 \begin{landscape}
 \section{Related work}
@@ -467,7 +586,7 @@ addresses.
   & 99.2\% (CNN$+$RNN), 99.19\% (attention), 98.9\% (ViT) --- not reproduced by the independent re-implementation in row 2 \\
 \addlinespace
 
-6 & Foysal, Islam, Karim \& Neehal (2019), \textit{arXiv:1909.01228}~\cite{foysal2019}
+6 & Islam, Hassan \& Khan (2019), \textit{arXiv:1909.01228}~\cite{islam2019}
   & BowlersNet (own; 8{,}100 \textbf{images}, 18 bowlers)
   & VGG16 $+$ transfer learning
   & Single-frame image classification of cricket bowling actions; selective layer freezing
@@ -498,8 +617,8 @@ it should be cited when presenting this project's own results.
 \end{keybox}
 
 {\footnotesize\color{muted}\textit{Note:} citations in rows 4 and 5 of the table above
-are reported via the survey in \cite{kang2025}. Locate and verify the original
-publications through your institution's library before final submission.}
+are reported via the survey in \cite{kang2025}; the original publications are not
+openly indexed, so their figures are as reported there.}
 
 \textbf{3. Attention appears, but is never isolated.} Row 5 reports an attention-based
 network, but introduces it alongside other architectural changes, so the contribution of
@@ -543,10 +662,9 @@ Split source & \texttt{artifacts/split\_manifest.csv} --- loaded, never regenera
 
 \begin{enumerate}[label=$\square$\ ,leftmargin=2em]
 \item Dataset added as a notebook input; \texttt{DATA\_DIR} resolves without error
-\item Licence and publication year transcribed from the Kaggle page (Section~\ref{sec:prov})
 \item Notebook executed with \textbf{Restart \& Run All}, so all plots and tables are stored in the \texttt{.ipynb}
-\item All \blank\ placeholders in this report replaced with computed values
-\item Most-confused class pair identified from the sample grid and recorded in Finding 3
+\item Licence and year filled in from the Kaggle page
+\item Confusion pair in Finding 3 confirmed against the Section 2.2 sample grid
 \item \texttt{artifacts/split\_manifest.csv} generated and committed
 \item Reference links verified against the original publications
 \item Notebook pushed to GitHub with outputs visible; repository link submitted
@@ -587,9 +705,9 @@ I.~Bhat et al.,
 \textit{International Journal of Engineering Research in Computer Science and
 Engineering}, vol.~11, no.~5, 2024.
 
-\bibitem{foysal2019}
-M.~F.~A.~Foysal, M.~S.~Islam, A.~Karim, and N.~Neehal,
-``Shot-Net: A Convolutional Neural Network for Classifying Different Cricket Shots,''
+\bibitem{islam2019}
+M.~N.~A.~Islam, T.~B.~Hassan, and S.~K.~Khan,
+``A CNN-based approach to classify cricket bowlers based on their bowling actions,''
 \textit{arXiv:1909.01228}, 2019.
 \url{https://arxiv.org/abs/1909.01228}
 

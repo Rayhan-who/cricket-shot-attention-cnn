@@ -29,14 +29,13 @@ Given one still frame of a batsman mid-stroke, predict which of four batting sho
 
 | | |
 |---|---|
-| **Name** | Cricket Shots Dataset (version 2) |
+| **Name** | Cricket Shots Dataset |
 | **Source** | https://www.kaggle.com/datasets/aneesh10/cricket-shot-dataset |
-| **Author** | Aneesh Aparajit (Kaggle user `aneesh10`), 2022 |
 | **Task** | Multi-class, single-label image classification |
-| **Classes** | 4 |
-| **Size** | ~675 MB (PNG) |
-| **Images** | *computed in Submission 1 — see notebook output* |
-| **Licence** | Unknown — no licence is granted on the Kaggle page, so the images are not redistributed here |
+| **Classes** | 4 — `drive`, `legglance-flick`, `pullshot`, `sweep` |
+| **Author / year** | Aneesh Aparajit, 2022 (version 2) |
+| **Images** | 4,724 (4,116 unique after duplicate grouping) |
+| **Licence** | **Unknown** — no licence specified; do not redistribute the images |
 
 > **Note on construction.** This dataset was assembled from internet images and then expanded by offline augmentation. Multiple files are therefore transformations of the same source photograph. See [Known issue: duplicate leakage](#known-issue-duplicate-leakage).
 
@@ -55,6 +54,10 @@ This repository controls for it:
 3. The train/val/test split is made over *groups*, stratified by class — never over individual files.
 4. The resulting split is frozen to [`artifacts/split_manifest.csv`](artifacts/) and reused unchanged by every later submission.
 
+**Measured result:** 345 duplicate groups covering 953 images; **608 redundant copies (12.9%)**; largest group holds 10 copies of one photograph; zero groups span more than one class. Effective dataset size is 4,116, not 4,724. Estimated accuracy inflation under a naive split: 2–3 percentage points.
+
+Note this is a *lower bound* — exact perceptual hashing does not catch rotated or cropped duplicates.
+
 This matters beyond tidiness. A 2025 standardized re-implementation study found that cricket shot models originally reporting 96%, 99.2% and 93% accuracy scored 46.0%, 55.6% and 57.7% when re-run under a consistent protocol ([Kang 2025](https://arxiv.org/abs/2510.09187)). Uncontrolled splits are a plausible contributor.
 
 ---
@@ -63,7 +66,7 @@ This matters beyond tidiness. A 2025 standardized re-implementation study found 
 
 | # | Deliverable | Notebook | Status |
 |---|---|---|---|
-| 1 | Dataset, EDA, related work | [`01_eda_and_related_work.ipynb`](notebooks/) | 🟡 In progress |
+| 1 | Dataset, EDA, related work | [`01_eda_and_related_work.ipynb`](notebooks/) | ✅ Complete |
 | 2 | 3+ pretrained models, frozen vs fine-tuned | `02_pretrained_models.ipynb` | ⚪ Not started |
 | 3 | Custom CNN from scratch | `03_custom_cnn.ipynb` | ⚪ Not started |
 | 4 | CNN + CBAM attention | `04_cnn_with_attention.ipynb` | ⚪ Not started |
@@ -145,7 +148,7 @@ The Submission 4 comparison holds architecture, split, seed, optimizer, learning
 
 Six papers surveyed in full in the Submission 1 notebook and report. Summary of the landscape:
 
-- The field is **overwhelmingly video-based**. Of the surveyed work, only Dey & Biswas (2024) and Foysal et al. (2019) operate on single images, and the latter classifies bowlers rather than shots.
+- The field is **overwhelmingly video-based**. Of the surveyed work, only Dey & Biswas (2024) and Islam et al. (2019) operate on single images, and the latter classifies bowlers rather than shots.
 - **Reported accuracies are unreliable.** See [Known issue](#known-issue-duplicate-leakage) above.
 - **Attention appears but is never isolated** — prior work introduces attention alongside other architectural changes, so its individual contribution cannot be separated. Submission 4 isolates it.
 
@@ -154,7 +157,7 @@ Key references:
 1. Sen, Deb, Dhar & Koshiba (2021), *Sensors* — [CricShotClassify](https://pmc.ncbi.nlm.nih.gov/articles/PMC8072636)
 2. Kang (2025) — [Modern Deep Learning Approaches for Cricket Shot Classification](https://arxiv.org/abs/2510.09187)
 3. Dey & Biswas (2024), *Int. J. Engineering* — [Shot-ViT](https://www.ije.ir/article_195819.html)
-4. Foysal, Islam, Karim & Neehal (2019) — [Shot-Net / cricket bowler identification](https://arxiv.org/abs/1909.01228)
+4. Islam, Hassan & Khan (2019) — [A CNN-based approach to classify cricket bowlers based on their bowling actions](https://arxiv.org/abs/1909.01228)
 
 ---
 
