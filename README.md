@@ -67,7 +67,7 @@ This matters beyond tidiness. A 2025 standardized re-implementation study found 
 | # | Deliverable | Notebook | Status |
 |---|---|---|---|
 | 1 | Dataset, EDA, related work | [`01_eda_and_related_work.ipynb`](notebooks/) | ✅ Complete |
-| 2 | 3+ pretrained models, frozen vs fine-tuned | `02_pretrained_models.ipynb` | ⚪ Not started |
+| 2 | 3+ pretrained models, frozen vs fine-tuned | [`02_pretrained_models.ipynb`](notebooks/) | ✅ Complete |
 | 3 | Custom CNN from scratch | `03_custom_cnn.ipynb` | ⚪ Not started |
 | 4 | CNN + CBAM attention | `04_cnn_with_attention.ipynb` | ⚪ Not started |
 
@@ -79,16 +79,38 @@ From Submission 2 onward, every notebook reports accuracy, precision, recall, F1
 
 *Populated as submissions complete.*
 
-| Model | Mode | Accuracy | Macro-F1 | Train time | Notes |
-|---|---|---|---|---|---|
-| ResNet50 | frozen | — | — | — | |
-| ResNet50 | fine-tuned | — | — | — | |
-| EfficientNet-B0 | frozen | — | — | — | |
-| EfficientNet-B0 | fine-tuned | — | — | — | |
-| DenseNet121 | frozen | — | — | — | |
-| DenseNet121 | fine-tuned | — | — | — | |
-| Custom CNN | scratch | — | — | — | Submission 3 baseline |
-| Custom CNN + CBAM | scratch | — | — | — | Submission 4 |
+| Model | Mode | Accuracy | Macro-F1 | Epochs | Train | ms/img |
+|---|---|---|---|---|---|---|
+| **EfficientNetB0** | **fine-tuned** | **0.9972** | **0.9973** | 24 | 10.6 m | 8.73 |
+| DenseNet121 | fine-tuned | 0.9972 | 0.9972 | 24 | 17.5 m | 14.87 |
+| ResNet50 | fine-tuned | 0.9945 | 0.9944 | 29 | 19.5 m | 9.75 |
+| ResNet50 | frozen | 0.9750 | 0.9752 | 40 | 12.0 m | 9.72 |
+| EfficientNetB0 | frozen | 0.9598 | 0.9602 | 40 | 6.6 m | 9.18 |
+| DenseNet121 | frozen | 0.9098 | 0.9103 | 40 | 13.3 m | 16.47 |
+| Custom CNN | scratch | — | — | — | — | — |
+| Custom CNN + CBAM | scratch | — | — | — | — | — |
+
+Fine-tuning improved macro F1 for all three backbones, mean **+0.0478**. No run overfit.
+
+![Frozen vs fine-tuned](results/figures/03_frozen_vs_finetuned.png)
+
+![Training curves](results/figures/01_training_curves.png)
+
+> ### ⚠️ These accuracies are inflated
+>
+> The dataset author states the images were augmented before release. The exact-hash
+> deduplication in Submission 1 removed 608 identical copies (12.9%), but a **rotated or
+> cropped** copy produces a completely different hash and was not caught — so those
+> variants are still split across train and test.
+>
+> Supporting evidence: DenseNet121 **frozen** reached 91.0% with only 4,100 trainable
+> parameters. A linear probe on fixed ImageNet features cannot learn anything
+> cricket-specific; reaching 91% means test images sit very close to training images in
+> feature space.
+>
+> An embedding-based similarity audit is the next step. The *relative* findings
+> (fine-tuning effect, hardest/easiest class, timings) are unaffected; the *absolute*
+> numbers should not be quoted without this caveat.
 
 ---
 
@@ -102,26 +124,32 @@ cricket-shot-attention-cnn/
 ├── .gitignore
 ├── notebooks/
 │   ├── 01_eda_and_related_work.ipynb
-│   ├── 02_pretrained_models.ipynb   # planned
+│   ├── 02_pretrained_models.ipynb
 │   ├── 03_custom_cnn.ipynb          # planned
 │   └── 04_cnn_with_attention.ipynb  # planned
 ├── artifacts/
-│   └── split_manifest.csv        # frozen split — written by notebook 01, do not regenerate
+│   ├── split_manifest.csv        # frozen split — written by notebook 01, do not regenerate
+│   ├── submission2_results.csv
+│   └── submission2_per_class_f1.csv
 ├── reports/
 │   ├── Submission1_Report.pdf
 │   ├── Submission1_Report.tex
+│   ├── Submission2_Report.pdf
+│   ├── Submission2_Report.tex
 │   └── figures/                  # sample frames used in the report
 └── results/
-    └── figures/
+    └── figures/                  # Submission 2+ plots
 ```
 
 ---
 
 ## How to run
 
-1. Open `notebooks/01_eda_and_related_work.ipynb` on Kaggle (File → Import Notebook → GitHub link).
+1. Open a notebook from `notebooks/` on Kaggle (File → Import Notebook → GitHub link).
 2. Add the dataset as an input: **+ Add Input** → `aneesh10/cricket-shot-dataset`.
-3. **Run All.** No extra installs needed. To run locally instead, `pip install -r requirements.txt` and set `DATA_DIR` to the dataset's `data/` folder.
+3. **Run All.** No extra installs needed. Notebook 02 trains six CNNs, so turn on a GPU first (Settings → Accelerator → GPU T4); it takes about 80 minutes.
+
+To run locally instead, `pip install -r requirements.txt` and set `DATA_DIR` to the dataset's `data/` folder.
 
 ---
 

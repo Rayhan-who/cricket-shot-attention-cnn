@@ -1,0 +1,5 @@
+class,ResNet50 (frozen),ResNet50 (fine-tuned),EfficientNetB0 (frozen),EfficientNetB0 (fine-tuned),DenseNet121 (frozen),DenseNet121 (fine-tuned)
+drive,0.9591,0.9889,0.9402,0.9945,0.8806,0.9972
+legglance-flick,0.9806,0.9944,0.9454,0.9972,0.9191,0.9944
+pullshot,0.9756,0.9973,0.9727,0.9973,0.9111,0.9973
+sweep,0.9855,0.9971,0.9825,1.0,0.9304,1.0

@@ -1,0 +1,409 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=2.3cm,top=2.6cm,bottom=2.4cm]{geometry}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{pdflscape}
+\usepackage[table]{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{caption}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage[colorlinks=true,linkcolor=black,urlcolor=black,citecolor=black]{hyperref}
+
+% Monochrome: hierarchy comes from weight, size and rules -- not colour.
+\definecolor{accent}{HTML}{000000}
+\definecolor{rule}{HTML}{000000}
+\definecolor{warn}{HTML}{000000}
+\definecolor{ink}{HTML}{000000}
+\definecolor{muted}{HTML}{000000}
+\color{ink}
+
+\titleformat{\section}
+  {\normalfont\Large\bfseries}{\thesection}{0.7em}{}[\vspace{-0.55em}{\color{black}\rule{\linewidth}{0.7pt}}]
+\titlespacing*{\section}{0pt}{1.7em}{0.7em}
+\titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection}{0.6em}{}
+\titlespacing*{\subsection}{0pt}{1.3em}{0.5em}
+\titleformat{\subsubsection}{\normalfont\normalsize\bfseries}{\thesubsubsection}{0.6em}{}
+
+\pagestyle{fancy}
+\setlength{\headheight}{22pt}
+\addtolength{\topmargin}{-10pt}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.3pt}
+\fancyhead[L]{\small Submission 2 — Pretrained Models}
+\fancyhead[R]{\small Cricket Shot Attention CNN}
+\fancyfoot[C]{\small\thepage}
+
+\newenvironment{keybox}
+  {\par\medskip\noindent\begin{tabular}{@{}p{0.3em}@{\hspace{0.8em}}p{\dimexpr\linewidth-2.2em}@{}}
+   {\color{black}\vrule width 2.5pt} &}
+  {\end{tabular}\par\medskip}
+
+\setlist[itemize]{leftmargin=1.3em,itemsep=0.25em,topsep=0.4em}
+\setlist[enumerate]{leftmargin=1.5em,itemsep=0.3em,topsep=0.4em}
+\renewcommand{\arraystretch}{1.25}
+\captionsetup{font=small,labelfont=bf,skip=6pt}
+\setlength{\parskip}{0.55em}
+\setlength{\parindent}{0pt}
+
+\graphicspath{{figures/}}
+
+\begin{document}
+
+\begin{center}
+{\small CNN PROJECT \textbullet\ SUBMISSION 2 OF 4}\\[0.9em]
+{\LARGE\bfseries Pretrained Models, With and Without Fine-Tuning}\\[1.0em]
+{\large Three ImageNet backbones, two transfer-learning modes, six runs}\\[1.2em]
+{\small Repository: \href{https://github.com/Rayhan-who/cricket-shot-attention-cnn}{github.com/Rayhan-who/cricket-shot-attention-cnn}}
+\end{center}
+
+\vspace{0.4em}
+{\hrule height 0.8pt}
+\vspace{1.0em}
+
+\section*{Summary}
+
+Six training runs were conducted: ResNet50, EfficientNetB0 and DenseNet121, each
+evaluated as a frozen feature extractor and as a fine-tuned network, for up to 40 epochs
+with early stopping. All six completed in 80.5 minutes on a Kaggle T4 GPU.
+
+The best configuration, EfficientNetB0 fine-tuned, reached \textbf{0.9972} test accuracy
+and \textbf{0.9973} macro F1 --- 719 of 721 test images correct. Fine-tuning improved
+macro F1 for all three architectures, by a mean of $+0.0478$. No run showed
+overfitting.
+
+\begin{keybox}
+\textbf{These absolute accuracies are almost certainly inflated by residual duplicate
+leakage in the dataset, and should not be reported without the qualification set out in
+Section~\ref{sec:caveat}.} The relative findings --- the fine-tuning effect, the
+per-class ordering and the cost measurements --- are unaffected.
+\end{keybox}
+
+\section{Experimental setup}
+
+\subsection{Inherited from Submission 1}
+
+The following were fixed in Submission 1 and are not re-decided here. Holding them
+constant is what makes the six runs comparable with each other and with Submissions 3
+and 4.
+
+\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{4.6cm}X@{}}
+\toprule
+Setting & Value \\
+\midrule
+Split & 70 / 15 / 15, grouped by duplicate identity, stratified by class \\
+Split sizes & train 3{,}321 \textbullet\ validation 682 \textbullet\ test 721 \\
+Random seed & 42 \\
+Channel conversion & forced RGB (4{,}586 of 4{,}724 images are RGBA) \\
+Input resolution & $224 \times 224$ \\
+Augmentation & rotation $\pm10^{\circ}$, zoom 0.8--1.0, brightness $\pm20\%$, contrast $\pm20\%$ \\
+Horizontal flip & \textbf{not applied} --- mirroring inverts the label on leg-side strokes \\
+Class weights & not applied --- class imbalance is 1.12\,:\,1 \\
+\bottomrule
+\end{tabularx}
+
+The split was not transferred as a file. It was \emph{recomputed} from the same
+deterministic procedure and then verified against Submission 1's counts; the notebook
+asserts the match and reports ``Split reproduces Submission 1 exactly''. An assertion
+also confirms that no duplicate group spans a partition boundary.
+
+\subsection{What varies}
+
+\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{4.6cm}X@{}}
+\toprule
+Factor & Levels \\
+\midrule
+Backbone & ResNet50, EfficientNetB0, DenseNet121 (ImageNet weights) \\
+Transfer mode & frozen (head only) \textbullet\ fine-tuned (whole backbone) \\
+Learning rate & $10^{-3}$ frozen, $10^{-4}$ fine-tuned \\
+Epoch budget & 40, with early stopping on validation loss, patience 8 \\
+\bottomrule
+\end{tabularx}
+
+\subsubsection*{Two implementation decisions worth recording}
+
+\textbf{Each backbone's own \texttt{preprocess\_input} is applied inside the model.}
+ResNet50 expects Caffe-style mean subtraction, DenseNet Torch-style normalisation, and
+EfficientNet raw $[0,255]$. Placing the preprocessing inside each model lets all six runs
+share one set of \texttt{uint8} arrays with no possibility of applying the wrong
+normalisation --- an error that would be silent and would look like a modelling result.
+
+\textbf{BatchNorm is held in inference mode throughout}, including when fine-tuning. The
+backbone is always called with \texttt{training=False}. Updating BatchNorm statistics
+while fine-tuning on a small dataset destabilises training and is a common cause of
+fine-tuned models scoring \emph{below} frozen ones.
+
+\section{Results}
+
+\subsection{All six runs}
+
+\begin{center}
+\small
+\begin{tabular}{@{}llrrrrrrr@{}}
+\toprule
+\textbf{Backbone} & \textbf{Mode} & \textbf{Acc.} & \textbf{Prec.} & \textbf{Rec.} &
+\textbf{Macro F1} & \textbf{Ep.} & \textbf{Train} & \textbf{ms/img} \\
+\midrule
+EfficientNetB0 & fine-tuned & \textbf{0.9972} & 0.9973 & 0.9973 & \textbf{0.9973} & 24 & 10.6\,m & 8.73 \\
+DenseNet121    & fine-tuned & 0.9972 & 0.9972 & 0.9973 & 0.9972 & 24 & 17.5\,m & 14.87 \\
+ResNet50       & fine-tuned & 0.9945 & 0.9945 & 0.9945 & 0.9944 & 29 & 19.5\,m & 9.75 \\
+ResNet50       & frozen     & 0.9750 & 0.9754 & 0.9752 & 0.9752 & 40 & 12.0\,m & 9.72 \\
+EfficientNetB0 & frozen     & 0.9598 & 0.9610 & 0.9599 & 0.9602 & 40 & \textbf{6.6\,m} & 9.18 \\
+DenseNet121    & frozen     & 0.9098 & 0.9122 & 0.9105 & 0.9103 & 40 & 13.3\,m & 16.47 \\
+\bottomrule
+\end{tabular}
+\normalsize
+\end{center}
+
+Precision and recall are macro-averaged. ``Ep.'' is the epoch at which training stopped
+out of a budget of 40.
+
+\subsection{The effect of fine-tuning}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.78\linewidth]{03_frozen_vs_finetuned.png}
+\caption{Macro F1 for each backbone, frozen versus fine-tuned. The direction is the same
+in all three cases; the magnitude is largest where the frozen baseline was weakest.}
+\end{figure}
+
+\begin{center}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+\textbf{Backbone} & \textbf{Frozen} & \textbf{Fine-tuned} & \textbf{Gain} \\
+\midrule
+DenseNet121    & 0.9103 & 0.9972 & \textbf{+0.0870} \\
+EfficientNetB0 & 0.9602 & 0.9973 & +0.0371 \\
+ResNet50       & 0.9752 & 0.9944 & +0.0192 \\
+\midrule
+\textbf{Mean}  &        &        & \textbf{+0.0478} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The gain is inversely related to the frozen baseline, which is the expected pattern:
+fine-tuning contributes most where the frozen ImageNet representation transfers least
+well to the target domain.
+
+A second signal supports the same reading. \textbf{All three frozen runs consumed the
+full 40-epoch budget without triggering early stopping}, while all three fine-tuned runs
+converged and stopped early --- at 24, 24 and 29 epochs. The frozen models were still
+improving when the budget expired; the fine-tuned models had finished.
+
+\subsection{Training curves}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{01_training_curves.png}
+\caption{Accuracy (top row) and loss (bottom row), training versus validation, for each
+of the six runs. Note that the validation curve sits \emph{above} the training curve in
+the frozen runs: training accuracy is measured on augmented images and validation on
+clean ones, so this ordering is the expected healthy state under this augmentation
+policy, not a sign of underfitting.}
+\end{figure}
+
+\subsection{Confusion matrices}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.96\linewidth]{02_confusion_matrices.png}
+\caption{Test-set confusion matrices for all six runs. Cells show counts; shading is
+row-normalised.}
+\end{figure}
+
+Submission 1 predicted, from visual inspection of the sample grid, that \texttt{drive}
+and \texttt{legglance-flick} would be the hardest pair to separate. The automated check
+reports \texttt{drive} $\leftrightarrow$ \texttt{pullshot} instead, so the
+\textbf{prediction was not confirmed}.
+
+\begin{keybox}
+That result should not be over-read. The best model makes \textbf{two errors in total},
+so the ``hardest pair'' is being inferred from a single misclassification. At this
+accuracy the confusion matrix carries almost no information. The more reliable signal
+comes from the weakest run --- DenseNet121 frozen --- where \texttt{drive} has the lowest
+per-class F1 by a clear margin.
+\end{keybox}
+
+\subsection{Per-class performance}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.94\linewidth]{04_per_class_f1.png}
+\caption{Per-class F1 across all six runs.}
+\end{figure}
+
+\begin{center}
+\begin{tabular}{@{}lrl@{}}
+\toprule
+\textbf{Class} & \textbf{Mean F1 across runs} & \\
+\midrule
+\texttt{drive}           & 0.9601 & hardest \\
+\texttt{legglance-flick} & 0.9719 & \\
+\texttt{pullshot}        & 0.9752 & \\
+\texttt{sweep}           & 0.9826 & easiest \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The extremes are consistent; the middle is not. \texttt{sweep} is the easiest class in
+five of six runs (in ResNet50 fine-tuned it trails \texttt{pullshot} by 0.0002), which
+is consistent with it being the most visually distinct posture --- it is the only stroke
+played from a lowered or kneeling position, so its silhouette differs from the other three
+in a way that survives heavy downsampling. \texttt{drive} is the hardest class in five of
+six runs (DenseNet121 fine-tuned is the exception), which is consistent with it being an
+upright side-on stroke that shares its body geometry with both \texttt{legglance-flick}
+and \texttt{pullshot}. The order of those two middle classes swaps between runs, so only
+the mean ordering above should be read as a finding.
+
+\subsection{Cost}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{05_cost_vs_accuracy.png}
+\caption{Test accuracy against training time (left) and against inference time (right).
+Circles are frozen runs, squares fine-tuned.}
+\end{figure}
+
+Training ranged from 6.6 minutes (EfficientNetB0 frozen) to 19.5 minutes (ResNet50
+fine-tuned). Inference ranged from 8.73 to 16.47 ms per image.
+
+\textbf{EfficientNetB0 fine-tuned is the best configuration on every axis that matters.}
+It has the highest accuracy, the fastest inference (8.73 ms/image), the second-fastest
+training (10.6 min), and the fewest trainable parameters among the fine-tuned runs
+(3.97 M, against 23.49 M for ResNet50). DenseNet121 matches its accuracy but costs 66\%
+more training time and 70\% more inference time for no measurable benefit.
+
+\section{Overfitting and underfitting}
+
+\begin{center}
+\begin{tabular}{@{}llr l@{}}
+\toprule
+\textbf{Backbone} & \textbf{Mode} & \textbf{Train--val gap} & \textbf{Assessment} \\
+\midrule
+ResNet50       & fine-tuned & $+0.0070$ & healthy \\
+DenseNet121    & fine-tuned & $+0.0029$ & healthy \\
+EfficientNetB0 & fine-tuned & $+0.0012$ & healthy \\
+ResNet50       & frozen     & $-0.0416$ & healthy \\
+EfficientNetB0 & frozen     & $-0.0433$ & healthy \\
+DenseNet121    & frozen     & $-0.1224$ & healthy \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Zero of six runs} exceeded a train--validation accuracy gap of 0.15. No
+corrective action was required.
+
+The negative gaps on the frozen runs are expected rather than a warning. Training
+accuracy is computed on augmented images while validation uses clean ones, so under this
+augmentation policy the validation score sitting above the training score is the normal
+state. The largest negative value, $-0.1224$ for DenseNet121 frozen, belongs to the
+weakest model overall and reflects a model still improving at the epoch budget rather
+than one that has failed to fit.
+
+The regularisation in place throughout was: early stopping on validation loss with
+patience 8 and best-weight restoration; \texttt{ReduceLROnPlateau} at factor 0.3; dropout
+0.3 before the classifier; rotation, zoom, brightness and contrast augmentation; and
+BatchNorm held in inference mode.
+
+\section{A caveat on these numbers}
+\label{sec:caveat}
+
+\begin{keybox}
+\textbf{The absolute accuracies reported above are almost certainly inflated, and the
+inflation is a property of the dataset rather than of the models.}
+\end{keybox}
+
+The dataset author states on the Kaggle page that the images were collected from the
+internet and then augmented to produce the released collection. Submission 1 controlled
+for this by grouping images with identical perceptual hashes and splitting on groups
+rather than on files. That removed 608 redundant copies (12.9\%) from consideration and
+prevented an estimated 17.9\% of the test set from carrying an exact twin in training.
+
+\textbf{That control is incomplete.} A difference hash is sensitive to geometric change:
+a rotated, flipped or cropped copy of a photograph produces a completely different hash
+and was therefore treated as an independent image. If the author's augmentation included
+any geometric transformation --- and the phrase ``augmented'' usually implies it ---
+those variants remain distributed across the train and test partitions, and the models
+are being scored partly on photographs they have already seen.
+
+Two observations support this reading.
+
+\begin{enumerate}
+\item \textbf{DenseNet121 frozen reached 91.0\% with 4{,}100 trainable parameters.} That
+  is a linear classifier on fixed ImageNet features. It cannot learn anything
+  cricket-specific. For it to reach 91\% on a fine-grained four-class problem, test
+  images must lie very close to training images in feature space.
+\item \textbf{99.7\% on a task characterised in Submission 1 as fine-grained.} All four
+  classes share one batsman, one pitch, comparable kit and comparable backdrops, with the
+  label carried by posture and bat angle across a minority of the frame.
+\end{enumerate}
+
+Neither observation is proof. The residual redundancy could genuinely be small and the
+task genuinely easy under ImageNet features. Resolving the question requires
+embedding-based similarity clustering rather than hashing, because rotated copies remain
+close in feature space even when their hashes diverge. That audit is the immediate next
+piece of work.
+
+\subsection{What this does and does not affect}
+
+\begin{tabularx}{\linewidth}{@{}p{5.4cm}X@{}}
+\toprule
+\textbf{Unaffected} & \textbf{Not trustworthy} \\
+\midrule
+The fine-tuning effect --- the direction held in all three architectures &
+Absolute accuracy and macro F1 \\
+Per-class extremes --- \texttt{drive} hardest and \texttt{sweep} easiest in five of six runs &
+The confusion-matrix analysis at the top of the range \\
+Training and inference timings &
+Use of 0.9973 as a target for Submission 3 \\
+\bottomrule
+\end{tabularx}
+
+\subsection{A second limitation, unquantifiable with this dataset}
+
+Beyond duplicate leakage there is \textbf{session correlation}. Photographs taken at the
+same match share stadium, kit, lighting and crowd, so a model can learn the match rather
+than the shot even when no two images are duplicates. The correct remedy is a
+session-wise split, but this dataset ships no match metadata, and the filenames were
+renumbered into contiguous sequences after augmentation, destroying any provenance that
+might have allowed grouping. This is recorded as a known threat to validity rather than
+addressed.
+
+\section{Carrying into Submission 3}
+
+\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{5.0cm}X@{}}
+\toprule
+Item & Value \\
+\midrule
+Split & loaded from \texttt{artifacts/split\_manifest.csv} --- not regenerated \\
+Seed & 42 \\
+Input, augmentation, metrics & unchanged \\
+Best pretrained macro F1 & 0.9973 (EfficientNetB0 fine-tuned) \\
+\bottomrule
+\end{tabularx}
+
+Submission 3 differs in exactly one respect: the network is trained from random
+initialisation rather than ImageNet weights. A from-scratch CNN is expected to score
+below the pretrained results --- roughly 3{,}300 training images is not enough to learn
+general visual features from scratch --- and that gap is the measured value of transfer
+learning.
+
+\begin{keybox}
+\textbf{The figure of 0.9973 should be treated as provisional.} If the leakage audit
+shows substantial residual redundancy, this baseline and the Submission 3 result will
+both move downwards, and the comparison that matters is the one made on a corrected
+split. That also determines whether Submission 4 is viable: an attention module cannot
+demonstrate a measurable gain against a baseline already above roughly 96\%, because the
+improvement required to clear run-to-run variance would exceed the headroom available.
+\end{keybox}
+
+\end{document}
