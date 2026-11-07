@@ -114,26 +114,11 @@ cricket-shot-attention-cnn/
 
 ---
 
-## Reproducing
+## How to run
 
-```bash
-git clone https://github.com/Rayhan-who/cricket-shot-attention-cnn
-cd cricket-shot-attention-cnn
-```
-
-Submission 1 needs only `numpy`, `pandas`, `matplotlib`, `pillow` and `scikit-learn` — all preinstalled on Kaggle and Colab. Locally: `pip install -r requirements.txt`.
-
-Then: add the dataset as a Kaggle input (or set `DATA_DIR`), open `notebooks/01_eda_and_related_work.ipynb`, and **Run All**.
-
-Submissions 2–4 load the frozen split rather than re-splitting:
-
-```python
-manifest = pd.read_csv("../artifacts/split_manifest.csv")  # path relative to notebooks/
-train_df = manifest[manifest.split == "train"]
-val_df   = manifest[manifest.split == "val"]
-test_df  = manifest[manifest.split == "test"]
-RANDOM_SEED = 42
-```
+1. Open `notebooks/01_eda_and_related_work.ipynb` on Kaggle (File → Import Notebook → GitHub link).
+2. Add the dataset as an input: **+ Add Input** → `aneesh10/cricket-shot-dataset`.
+3. **Run All.** No extra installs needed. To run locally instead, `pip install -r requirements.txt` and set `DATA_DIR` to the dataset's `data/` folder.
 
 ---
 
