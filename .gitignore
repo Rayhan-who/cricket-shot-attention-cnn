@@ -1,0 +1,62 @@
+# ---- Dataset (never commit; download from Kaggle) ----------------------
+data/
+dataset/
+*.zip
+*.tar.gz
+
+# ---- Model weights / checkpoints ---------------------------------------
+*.h5
+*.hdf5
+*.pt
+*.pth
+*.ckpt
+*.keras
+*.pb
+*.onnx
+*.tflite
+checkpoints/
+saved_models/
+runs/
+wandb/
+lightning_logs/
+
+# ---- Jupyter ------------------------------------------------------------
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+*-checkpoint.ipynb
+
+# ---- Python -------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ---- Virtual environments ----------------------------------------------
+venv/
+env/
+.venv/
+ENV/
+.conda/
+
+# ---- Secrets ------------------------------------------------------------
+kaggle.json
+.env
+*.key
+
+# ---- OS / editor --------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*~
+
+# ---- Keep these ---------------------------------------------------------
+# artifacts/split_manifest.csv is intentionally NOT ignored.
+# It is small, and it is what makes Submissions 2-4 comparable.

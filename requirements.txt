@@ -1,0 +1,7 @@
+# Submission 1 (all preinstalled on Kaggle and Colab)
+numpy
+pandas
+matplotlib
+pillow
+scikit-learn
+jupyter

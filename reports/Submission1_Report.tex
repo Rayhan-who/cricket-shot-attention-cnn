@@ -1,0 +1,599 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=2.3cm,top=2.6cm,bottom=2.4cm]{geometry}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{pdflscape}
+\usepackage[table,dvipsnames]{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{caption}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage[colorlinks=true,linkcolor=black,urlcolor=black,citecolor=black]{hyperref}
+
+% ---- palette -----------------------------------------------------------
+% Monochrome: hierarchy comes from weight, size and rules -- not colour.
+\definecolor{accent}{HTML}{000000}
+\definecolor{accentlt}{HTML}{FFFFFF}
+\definecolor{rule}{HTML}{000000}
+\definecolor{warn}{HTML}{000000}
+\definecolor{warnlt}{HTML}{FFFFFF}
+\definecolor{ink}{HTML}{000000}
+\definecolor{muted}{HTML}{000000}
+
+\color{ink}
+
+% ---- headings ----------------------------------------------------------
+\titleformat{\section}
+  {\normalfont\Large\bfseries}{\thesection}{0.7em}{}[\vspace{-0.55em}{\color{black}\rule{\linewidth}{0.7pt}}]
+\titlespacing*{\section}{0pt}{1.7em}{0.7em}
+
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{ink}}{\thesubsection}{0.6em}{}
+\titlespacing*{\subsection}{0pt}{1.3em}{0.5em}
+
+\titleformat{\subsubsection}
+  {\normalfont\normalsize\bfseries\color{muted}}{\thesubsubsection}{0.6em}{}
+
+% ---- header / footer ---------------------------------------------------
+\pagestyle{fancy}
+\setlength{\headheight}{22pt}
+\addtolength{\topmargin}{-10pt}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.3pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{rule}\leaders\hrule height \headrulewidth\hfill}}
+\fancyhead[L]{\small\color{muted}Submission 1 — Dataset, EDA and Related Work}
+\fancyhead[R]{\small\color{muted}Cricket Shot Attention CNN}
+\fancyfoot[C]{\small\color{muted}\thepage}
+
+% ---- helpers -----------------------------------------------------------
+\newcommand{\blank}{\rule[-0.2ex]{1.8em}{1.1pt}}
+
+\newenvironment{keybox}
+  {\par\medskip\noindent\begin{tabular}{@{}p{0.3em}@{\hspace{0.8em}}p{\dimexpr\linewidth-2.2em}@{}}
+   {\color{accent}\vrule width 2.5pt} &}
+  {\end{tabular}\par\medskip}
+
+\newenvironment{warnbox}
+  {\par\medskip\noindent\begin{tabular}{@{}p{0.3em}@{\hspace{0.8em}}p{\dimexpr\linewidth-2.2em}@{}}
+   {\color{warn}\vrule width 2.5pt} &}
+  {\end{tabular}\par\medskip}
+
+\setlist[itemize]{leftmargin=1.3em,itemsep=0.25em,topsep=0.4em}
+\setlist[enumerate]{leftmargin=1.5em,itemsep=0.3em,topsep=0.4em}
+
+\renewcommand{\arraystretch}{1.25}
+\captionsetup{font=small,labelfont={bf,color=accent},skip=6pt}
+
+\setlength{\parskip}{0.55em}
+\setlength{\parindent}{0pt}
+
+% ========================================================================
+\begin{document}
+
+% ---- title block -------------------------------------------------------
+\begin{center}
+{\color{muted}\small CNN PROJECT \textbullet\ SUBMISSION 1 OF 4}\\[0.9em]
+{\LARGE\bfseries\color{accent} Attention-Guided Fine-Grained Classification\\[0.25em]
+of Cricket Batting Shots from Single Frames}\\[1.1em]
+{\large Dataset, Exploratory Analysis and Related Work}\\[1.4em]
+{\color{muted}\small
+Repository: \href{https://github.com/Rayhan-who/cricket-shot-attention-cnn}{github.com/Rayhan-who/cricket-shot-attention-cnn}}
+\end{center}
+
+\vspace{0.6em}
+{\hrule height 0.8pt}
+\vspace{1.2em}
+
+% ========================================================================
+\section*{Summary}
+\addcontentsline{toc}{section}{Summary}
+
+This submission establishes the dataset and evaluation protocol for a four-part CNN
+project on cricket batting shot recognition. The task is \textbf{multi-class,
+single-label image classification} over four shot types, performed on
+\textbf{individual still frames} rather than video sequences.
+
+Three outcomes are delivered here. First, a complete inventory and exploratory analysis
+of the dataset. Second, a \textbf{duplicate audit} establishing that the published
+dataset contains offline-augmented copies of the same source photographs, and a
+correspondingly leakage-safe train/validation/test split that all later submissions
+reuse unchanged. Third, a survey of prior work establishing that the field is almost
+entirely video-based, that published accuracies in it are known to be difficult to
+reproduce, and that the contribution of attention has not previously been isolated.
+
+\begin{keybox}
+\textbf{Framing.} Almost all prior cricket shot classification work models temporal
+sequences with LSTM or GRU layers over multiple frames. This project removes that signal
+entirely and asks how much of the task is recoverable from a single frame --- and
+whether spatial attention can close part of the resulting gap.
+\end{keybox}
+
+% ========================================================================
+\section{Dataset information}
+
+\subsection{Provenance}
+\label{sec:prov}
+
+\begin{keybox}
+\textbf{Action required.} The two fields marked \blank\ below must be read directly from
+the dataset's Kaggle page and entered before final submission. If the licence field
+reads ``Unspecified'', write \emph{Unspecified} --- do not infer a licence.
+\end{keybox}
+
+\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{4.2cm}X@{}}
+\toprule
+Field & Value \\
+\midrule
+Name & Cricket Shot Dataset \\
+Source & \href{https://www.kaggle.com/datasets/aneesh10/cricket-shot-dataset}{kaggle.com/datasets/aneesh10/cricket-shot-dataset} \\
+Author & Aneesh (Kaggle user \texttt{aneesh10}) \\
+Licence & \blank \\
+Year published & \blank \\
+Task type & Multi-class, single-label image classification \\
+Number of classes & 4 \\
+Class names & \texttt{drive}, \texttt{legglance-flick}, \texttt{pullshot}, \texttt{sweep} \\
+Construction & Images collected from internet sources, then expanded by offline augmentation \\
+\bottomrule
+\end{tabularx}
+
+\subsection{Class definitions}
+
+\begin{tabularx}{\linewidth}{@{}>{\ttfamily}p{3.4cm}X@{}}
+\toprule
+\textnormal{\bfseries Class} & \textbf{Shots included} \\
+\midrule
+drive & Cover drive, straight drive, off drive \\
+legglance-flick & Leg glance and flick \\
+pullshot & Pull \\
+sweep & Sweep \\
+\bottomrule
+\end{tabularx}
+
+\subsection{Measured properties}
+
+The following are computed automatically by the accompanying notebook
+(\texttt{01\_eda\_and\_related\_work.ipynb}) and must be transcribed from its output.
+
+\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{6.2cm}X@{}}
+\toprule
+Property & Measured value \\
+\midrule
+Total images & \blank \\
+Images per class & \blank \\
+Image dimensions (min / median / max) & \blank \\
+Distinct size combinations & \blank \\
+Colour channels & \blank \\
+File format & \blank \\
+Total size on disk & \blank \\
+Corrupt or unreadable files & \blank \\
+\bottomrule
+\end{tabularx}
+
+\subsection{Why this dataset matters in its domain}
+
+Cricket has an audience exceeding one billion people, and the broadcast and coaching
+workflows built around it remain substantially manual. Automatic batting-shot
+recognition supports three applications that recur throughout the literature:
+
+\begin{itemize}
+\item \textbf{Highlight generation.} Broadcasters currently tag shot types by hand
+  across many hours of footage. Automatic labelling is a direct cost reduction.
+\item \textbf{Coaching and technique analysis.} Shot-type identification is the
+  precondition for any downstream biomechanical feedback --- a system cannot assess the
+  execution of a pull shot until it knows a pull shot was attempted.
+\item \textbf{Automated commentary and context-aware advertising.} Both require
+  machine-readable understanding of what is happening on the field.
+\end{itemize}
+
+What makes this a genuinely difficult classification problem, rather than a trivial one,
+is that all four classes share an identical scene grammar: one batsman, one pitch, the
+same protective equipment, comparable stadium backdrops, and frequently a crowd and
+sightscreen in the background. The class label is determined almost entirely by
+\textbf{body posture and bat angle}, which occupy a small fraction of the total frame
+area. Prior work makes precisely this observation --- the visual similarity between
+batting shots is what renders hand-crafted feature extraction impractical and motivates
+learned representations~\cite{sen2021}.
+
+This property is also what makes the dataset suitable for the later submissions. A
+coarse or visually separable dataset would saturate near ceiling accuracy under any
+reasonable pretrained backbone, leaving no measurable headroom for the attention module
+introduced in Submission 4 to demonstrate an effect. Fine-grained difficulty is a
+requirement of the experimental design, not an inconvenience.
+
+% ========================================================================
+\section{Exploratory data analysis}
+
+\subsection{What was measured}
+
+\begin{tabularx}{\linewidth}{@{}p{5.0cm}X@{}}
+\toprule
+\textbf{Analysis} & \textbf{Purpose} \\
+\midrule
+Class distribution & Determine whether accuracy alone is a valid headline metric, and whether class weighting is required \\
+Sample grid, 5 per class & Visual assessment of background clutter, subject scale, and inter-class similarity \\
+Dimension and aspect histograms & Decide the resize and crop strategy \\
+Perceptual duplicate audit & Quantify redundancy and prevent train/test leakage \\
+Grouped stratified split & Produce a frozen, reusable partition for Submissions 2--4 \\
+\bottomrule
+\end{tabularx}
+
+\subsection{Sample images}
+
+Figure~\ref{fig:samples} shows two representative frames from each class. They were
+chosen to span the range of quality present in the dataset rather than to show the
+clearest examples, because the variation is itself a finding.
+
+\begin{figure}[htbp]
+\centering
+\newcommand{\simg}[1]{\raisebox{-0.5\height}{\includegraphics[width=0.405\linewidth]{#1}}}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}>{\bfseries\footnotesize\ttfamily}p{2.4cm}cc@{}}
+drive &
+  \simg{figures/drive_a.jpg} & \simg{figures/drive_b.jpg} \\[10pt]
+legglance-flick &
+  \simg{figures/leg_a.jpg} & \simg{figures/leg_b.jpg} \\[10pt]
+pullshot &
+  \simg{figures/pull_a.jpg} & \simg{figures/pull_b.jpg} \\[10pt]
+sweep &
+  \simg{figures/sweep_a.jpg} & \simg{figures/sweep_b.jpg} \\[4pt]
+\end{tabular}
+\caption{Two samples per class. Note the shared scene grammar across all four rows:
+one batsman, one pitch, comparable kit and comparable backdrops. The class label is
+carried almost entirely by body posture and bat angle. Note also the range of capture
+quality --- daylight and floodlit matches, net practice and match play, sharp frames and
+degraded broadcast captures with motion blur and colour cast.}
+\label{fig:samples}
+\end{figure}
+
+Four observations follow directly from these samples and inform the preprocessing plan
+in Section~\ref{sec:prep}.
+
+\textbf{The subject occupies a minority of the frame.} In most samples the batsman
+covers well under half the image area. The remainder is turf, crowd, sightscreen and
+advertising hoardings --- none of which carries class information, and all of which
+competes for the network's representational capacity. This is the specific condition
+that spatial attention is intended to address in Submission 4.
+
+\textbf{Backgrounds are correlated with capture context, not with class.} Advertising
+boards, crowd density and floodlighting vary widely but are unrelated to which shot is
+being played. A network that latches onto them will appear to perform well on the
+training distribution and fail on new footage.
+
+\textbf{Capture quality is highly variable.} The dataset mixes sharp high-resolution
+match photography with low-resolution broadcast captures showing motion blur,
+compression artefacts and strong colour casts. This argues for brightness and contrast
+jitter during augmentation, and against any preprocessing step that assumes consistent
+colour balance.
+
+\textbf{Shot geometry is side-dependent.} Comparing the \texttt{sweep} and
+\texttt{legglance-flick} rows makes clear that these classes are distinguished partly by
+which side of the body the ball is played to, and by the degree of knee bend. This is
+the direct justification for excluding horizontal flipping from the augmentation
+pipeline --- see the note in Section~\ref{sec:prep}.
+
+\subsection{Class balance}
+
+\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{6.2cm}X@{}}
+\toprule
+Quantity & Value \\
+\midrule
+Largest class (name, count) & \blank \\
+Smallest class (name, count) & \blank \\
+Imbalance ratio & \blank\ : 1 \\
+Verdict & \blank \\
+\bottomrule
+\end{tabularx}
+
+\textbf{Consequence.} If the imbalance ratio exceeds roughly 1.5:1, macro-averaged F1 is
+reported alongside accuracy from Submission 2 onward. Above roughly 3:1, class weights
+are applied during training in Submission 3 and inherited unchanged by Submission 4.
+
+\subsection{Duplicate audit and leakage control}
+\label{sec:dupaudit}
+
+\begin{warnbox}
+\textbf{This is the most consequential finding of Submission 1.} The dataset was
+assembled by collecting images and then augmenting them offline before publication.
+Multiple files are therefore transformations of a single source photograph. A
+conventional per-file random split distributes those transformations across both the
+training and test partitions, so the model is evaluated on images it has effectively
+already seen, and \emph{every} accuracy figure reported downstream is inflated.
+\end{warnbox}
+
+\subsubsection{Method}
+
+A 64-bit perceptual \emph{difference hash} (dHash) is computed for each image. Each
+image is converted to greyscale, resized to $9 \times 8$ pixels, and the sign of the
+horizontal gradient between adjacent pixels is recorded as one bit per comparison. The
+resulting fingerprint is insensitive to minor changes in scale, compression and
+brightness, but responds to genuine differences in content. Images sharing a hash are
+collected into a \textbf{duplicate group}.
+
+The implementation depends on nothing beyond Pillow and NumPy, so it runs unchanged on
+Kaggle, Colab or a local machine.
+
+\subsubsection{Findings}
+
+\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{7.0cm}X@{}}
+\toprule
+Quantity & Value \\
+\midrule
+Unique perceptual hashes & \blank\ of \blank\ images \\
+Duplicate groups & \blank \\
+Images inside a duplicate group & \blank \\
+Redundant copies & \blank\ (\blank\% of dataset) \\
+Groups spanning more than one class & \blank \\
+\textbf{Effective dataset size} & \blank\ independent images \\
+\bottomrule
+\end{tabularx}
+
+Groups spanning more than one class, if any are found, represent label conflicts:
+perceptually identical images carrying different ground-truth labels. These are reported
+and inspected rather than silently removed.
+
+\subsubsection{Resulting split policy}
+
+The train/validation/test partition is constructed over \emph{duplicate groups},
+stratified by class, in a 70/15/15 ratio with seed 42. An assertion verifies that no
+group's members appear in more than one partition. The result is written to
+\texttt{artifacts/split\_manifest.csv} and committed to the repository.
+
+\begin{keybox}
+\textbf{Submissions 2, 3 and 4 load this manifest. They do not re-split.} If the
+partition changed between Submission 3 and Submission 4, the attention comparison would
+be two unrelated training runs rather than a controlled experiment, and no difference
+between them could be attributed to the attention module.
+\end{keybox}
+
+\subsection{Written findings}
+
+\textit{Complete each statement from the notebook output before submission. The
+reasoning is written; the numbers are not.}
+
+\textbf{Finding 1 --- Balance.} The dataset contains \blank\ images across four classes,
+with an imbalance ratio of \blank\,:\,1, which is \blank. Accuracy alone \blank\ a
+sufficient headline metric; macro-F1 \blank\ reported alongside it, and class weights
+\blank\ applied.
+
+\textbf{Finding 2 --- Redundancy.} Perceptual hashing identified \blank\ duplicate
+groups covering \blank\ images, meaning \blank\ files (\blank\%) are redundant. The
+effective dataset size is \blank\ independent images rather than the \blank\ files on
+disk. All partitioning is therefore performed on group identity.
+
+\textbf{Finding 3 --- Class similarity.} All four classes share an identical scene
+grammar; the discriminative signal is confined to posture and bat angle within a
+minority of the frame. The most visually similar pair is \blank\ and \blank. This is the
+specific weakness the attention module in Submission 4 targets, by suppressing
+background response and concentrating representational capacity on the batsman.
+
+\textbf{Finding 4 --- Geometry and noise.} Images span \blank--\blank\,px in width and
+\blank--\blank\,px in height across \blank\ distinct size combinations. Backgrounds vary
+in illumination and crowd density, and some frames are low-resolution broadcast captures
+with visible compression artefacts. All images are resized to $224 \times 224$ to match
+the ImageNet-pretrained backbones used in Submission 2.
+
+\subsection{Preprocessing and augmentation plan}
+\label{sec:prep}
+
+\begin{tabularx}{\linewidth}{@{}p{4.3cm}p{4.3cm}X@{}}
+\toprule
+\textbf{Decision} & \textbf{Choice} & \textbf{Driven by} \\
+\midrule
+Resize & $224 \times 224$ & Finding 4; pretrained backbone input size \\
+Normalisation & ImageNet mean/std & Transfer learning in Submission 2 \\
+Horizontal flip & \textbf{Not applied} & Finding 3 --- see note below \\
+Rotation & $\pm 10^{\circ}$ & Finding 4; realistic broadcast camera tilt \\
+Brightness / contrast & $\pm 20\%$ & Finding 4; varying stadium illumination \\
+Random resized crop & scale 0.8--1.0 & Finding 3; forces reliance on the batsman \\
+Class weights & \blank & Finding 1 \\
+Split strategy & Grouped, stratified, 70/15/15 & Finding 2 \\
+\bottomrule
+\end{tabularx}
+
+\begin{warnbox}
+\textbf{On horizontal flipping.} This is the augmentation most commonly applied by
+default in image classification pipelines, and it is incorrect for this dataset. A sweep
+and a leg glance are defined in part by which side of the body the ball is played to.
+Mirroring an image therefore changes the correct label, injecting systematic label noise
+rather than useful invariance. It is excluded deliberately.
+\end{warnbox}
+
+% ========================================================================
+\clearpage
+\begin{landscape}
+\section{Related work}
+
+Peer-reviewed papers and preprints only. Note that the great majority of prior work on
+cricket shot classification operates on \emph{video}; this is the gap the present project
+addresses.
+
+\footnotesize
+\setlength{\LTleft}{\fill}
+\setlength{\LTright}{\fill}
+\renewcommand{\arraystretch}{1.15}
+\begin{longtable}{@{}p{0.5cm}p{3.7cm}p{3.0cm}p{3.7cm}p{5.8cm}p{5.0cm}@{}}
+\toprule
+\textbf{\#} & \textbf{Paper (author, year)} & \textbf{Dataset} & \textbf{Model(s)} & \textbf{Approach} & \textbf{Result} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{\#} & \textbf{Paper} & \textbf{Dataset} & \textbf{Model(s)} & \textbf{Approach} & \textbf{Result} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+
+1 & Sen, Deb, Dhar \& Koshiba (2021), \textit{Sensors} --- ``CricShotClassify''~\cite{sen2021}
+  & CricShot10 (own; 10 classes, video)
+  & Conventional CNN, dilated CNN, VGG16 / InceptionV3 / Xception / DenseNet169, each $+$ GRU
+  & Transfer learning with frozen backbones, then selective unfreezing of the final 4 and final 8 VGG16 layers; GRU for temporal dependency
+  & 86\% (fully frozen VGG16--GRU); 93\% (final 4 or 8 layers fine-tuned) \\
+\addlinespace
+
+2 & Kang (2025), \textit{arXiv:2510.09187}~\cite{kang2025}
+  & CricShot10
+  & Seven models: CNN$+$GRU, Bi-LSTM $+$ attention, ViT, transfer learning, EfficientNet-B0 $+$ GRU
+  & Unified re-implementation of prior work under a single standardised evaluation protocol
+  & 92.25\% (proposed). \textbf{Re-implementations of three prior published models scored 46.0\%, 55.6\% and 57.7\% against originally reported 96\%, 99.2\% and 93\%} \\
+\addlinespace
+
+3 & Dey \& Biswas (2024), \textit{Int.\ J.\ Engineering} --- ``Shot-ViT''~\cite{dey2024}
+  & CBSId (own; 2{,}160 annotated \textbf{images}, 7 classes)
+  & Fine-tuned Vision Transformer, compared against VGG19, ResNet50, I-AlexNet, ViT\_B32
+  & Image-level rather than video-level classification; ViT fine-tuned for cricket batting shots
+  & Shot-ViT outperforms all four compared CNN and ViT baselines \\
+\addlinespace
+
+4 & Kumar et al.\ (2019), \textit{IJRTE}~\cite{kumar2019}
+  & Own video dataset
+  & Modified LRCN (CNN $+$ LSTM)
+  & CNN for spatial features, LSTM for temporal modelling
+  & 96\%, but on a reduced set of \textbf{5} shot classes rather than the full 10 \\
+\addlinespace
+
+5 & Bhat et al.\ (2024), \textit{IJERCSE}~\cite{bhat2024}
+  & Cricket shot video dataset
+  & CNN$+$RNN, attention network, ViT
+  & Direct comparison of three deep learning paradigms on one dataset
+  & 99.2\% (CNN$+$RNN), 99.19\% (attention), 98.9\% (ViT) --- not reproduced by the independent re-implementation in row 2 \\
+\addlinespace
+
+6 & Foysal, Islam, Karim \& Neehal (2019), \textit{arXiv:1909.01228}~\cite{foysal2019}
+  & BowlersNet (own; 8{,}100 \textbf{images}, 18 bowlers)
+  & VGG16 $+$ transfer learning
+  & Single-frame image classification of cricket bowling actions; selective layer freezing
+  & 93.3\% average test accuracy \\
+
+\end{longtable}
+\renewcommand{\arraystretch}{1.25}
+\normalsize
+\end{landscape}
+
+\subsection{What this survey establishes}
+
+\textbf{1. The field is overwhelmingly video-based.} Rows 1, 2, 4 and 5 all model
+temporal sequences. Only rows 3 and 6 operate on single images, and row 6 classifies
+bowlers rather than batting shots. Single-frame batting shot classification is therefore
+genuinely under-examined, which is the niche this project occupies.
+
+\textbf{2. Published accuracies in this area are unreliable.} Kang~\cite{kang2025}
+re-implemented prior models under a standardised protocol and recovered roughly half the
+originally reported accuracy in each case. Inconsistent data partitioning is a plausible
+contributor --- precisely the failure mode that the duplicate audit in Section~\ref{sec:dupaudit} is
+designed to eliminate here.
+
+\begin{keybox}
+This is why the leakage control in this project is not incidental tidiness. It is a
+direct response to a documented reproducibility problem in the immediate literature, and
+it should be cited when presenting this project's own results.
+\end{keybox}
+
+{\footnotesize\color{muted}\textit{Note:} citations in rows 4 and 5 of the table above
+are reported via the survey in \cite{kang2025}. Locate and verify the original
+publications through your institution's library before final submission.}
+
+\textbf{3. Attention appears, but is never isolated.} Row 5 reports an attention-based
+network, but introduces it alongside other architectural changes, so the contribution of
+attention alone cannot be separated from the rest. Submission 4 of this project holds
+architecture, data, split, seed and all hyperparameters constant and varies only the
+presence of the attention module, making the measured difference attributable.
+
+% ========================================================================
+\section{Protocol for subsequent submissions}
+
+The following are fixed here and held constant throughout, so that every later
+comparison is attributable.
+
+\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{5.2cm}X@{}}
+\toprule
+Setting & Value \\
+\midrule
+Split & 70 / 15 / 15, grouped by duplicate identity, stratified by class \\
+Random seed & 42 \\
+Input resolution & $224 \times 224$ \\
+Normalisation & ImageNet channel statistics \\
+Reported metrics & Accuracy, precision, recall, F1 (per class and macro), confusion matrix, training and testing time \\
+Split source & \texttt{artifacts/split\_manifest.csv} --- loaded, never regenerated \\
+\bottomrule
+\end{tabularx}
+
+\subsection*{Planned work}
+
+\begin{tabularx}{\linewidth}{@{}p{1.0cm}p{5.4cm}X@{}}
+\toprule
+\textbf{\#} & \textbf{Deliverable} & \textbf{Scope} \\
+\midrule
+2 & Pretrained models & Three ImageNet backbones (ResNet50, EfficientNet-B0, DenseNet121), each evaluated frozen and fine-tuned, 30--50 epochs --- six training runs \\
+3 & Custom CNN from scratch & Four convolutional blocks with batch normalisation and ReLU, global average pooling, fully connected head; augmentation and early stopping \\
+4 & CNN with attention & The Submission 3 architecture with a CBAM module inserted after each convolutional block. Nothing else changes. Grad-CAM comparison of where each model attends \\
+\bottomrule
+\end{tabularx}
+
+% ========================================================================
+\section{Submission checklist}
+
+\begin{enumerate}[label=$\square$\ ,leftmargin=2em]
+\item Dataset added as a notebook input; \texttt{DATA\_DIR} resolves without error
+\item Licence and publication year transcribed from the Kaggle page (Section~\ref{sec:prov})
+\item Notebook executed with \textbf{Restart \& Run All}, so all plots and tables are stored in the \texttt{.ipynb}
+\item All \blank\ placeholders in this report replaced with computed values
+\item Most-confused class pair identified from the sample grid and recorded in Finding 3
+\item \texttt{artifacts/split\_manifest.csv} generated and committed
+\item Reference links verified against the original publications
+\item Notebook pushed to GitHub with outputs visible; repository link submitted
+\end{enumerate}
+
+% ========================================================================
+\begin{thebibliography}{9}
+\small
+
+\bibitem{sen2021}
+A.~Sen, K.~Deb, P.~K.~Dhar, and T.~Koshiba,
+``CricShotClassify: An Approach to Classifying Batting Shots from Cricket Videos Using a
+Convolutional Neural Network and Gated Recurrent Unit,''
+\textit{Sensors}, 2021.
+\url{https://pmc.ncbi.nlm.nih.gov/articles/PMC8072636}
+
+\bibitem{kang2025}
+S.~Kang,
+``Modern Deep Learning Approaches for Cricket Shot Classification: A Comprehensive
+Baseline Study,''
+\textit{arXiv:2510.09187}, 2025.
+\url{https://arxiv.org/abs/2510.09187}
+
+\bibitem{dey2024}
+A.~Dey and S.~Biswas,
+``Shot-ViT: Cricket Batting Shots Classification with Vision Transformer Network,''
+\textit{International Journal of Engineering}, 2024.
+\url{https://www.ije.ir/article_195819.html}
+
+\bibitem{kumar2019}
+B.~Kumar et al.,
+``Video based cricket shot classification using modified LRCN approach,''
+\textit{International Journal of Recent Technology and Engineering}, vol.~8, no.~3, 2019.
+
+\bibitem{bhat2024}
+I.~Bhat et al.,
+``Classification of cricket shots from cricket videos using deep learning models,''
+\textit{International Journal of Engineering Research in Computer Science and
+Engineering}, vol.~11, no.~5, 2024.
+
+\bibitem{foysal2019}
+M.~F.~A.~Foysal, M.~S.~Islam, A.~Karim, and N.~Neehal,
+``Shot-Net: A Convolutional Neural Network for Classifying Different Cricket Shots,''
+\textit{arXiv:1909.01228}, 2019.
+\url{https://arxiv.org/abs/1909.01228}
+
+\end{thebibliography}
+
+
+\end{document}
