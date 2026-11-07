@@ -29,12 +29,14 @@ Given one still frame of a batsman mid-stroke, predict which of four batting sho
 
 | | |
 |---|---|
-| **Name** | Cricket Shot Dataset |
+| **Name** | Cricket Shots Dataset (version 2) |
 | **Source** | https://www.kaggle.com/datasets/aneesh10/cricket-shot-dataset |
+| **Author** | Aneesh Aparajit (Kaggle user `aneesh10`), 2022 |
 | **Task** | Multi-class, single-label image classification |
 | **Classes** | 4 |
+| **Size** | ~675 MB (PNG) |
 | **Images** | *computed in Submission 1 — see notebook output* |
-| **Licence** | *verify on the Kaggle page before redistributing* |
+| **Licence** | Unknown — no licence is granted on the Kaggle page, so the images are not redistributed here |
 
 > **Note on construction.** This dataset was assembled from internet images and then expanded by offline augmentation. Multiple files are therefore transformations of the same source photograph. See [Known issue: duplicate leakage](#known-issue-duplicate-leakage).
 
