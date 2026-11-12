@@ -3,7 +3,7 @@
 Fine-grained classification of cricket batting shots from **single frames** — pretrained CNNs, a custom CNN trained from scratch, and a CBAM attention variant, evaluated under a leakage-controlled protocol.
 
 ![status](https://img.shields.io/badge/status-in%20progress-orange)
-![submission](https://img.shields.io/badge/submission-1%20of%204-blue)
+![submission](https://img.shields.io/badge/submission-3%20of%204-blue)
 ![license](https://img.shields.io/badge/code-MIT-green)
 
 ---
@@ -35,6 +35,7 @@ Given one still frame of a batsman mid-stroke, predict which of four batting sho
 | **Classes** | 4 — `drive`, `legglance-flick`, `pullshot`, `sweep` |
 | **Author / year** | Aneesh Aparajit, 2022 (version 2) |
 | **Images** | 4,724 (4,116 unique after duplicate grouping) |
+| **Effective size** | **2,777 independent images** — see the leakage audit under [Results](#results) |
 | **Licence** | **Unknown** — no licence specified; do not redistribute the images |
 
 > **Note on construction.** This dataset was assembled from internet images and then expanded by offline augmentation. Multiple files are therefore transformations of the same source photograph. See [Known issue: duplicate leakage](#known-issue-duplicate-leakage).
@@ -58,6 +59,8 @@ This repository controls for it:
 
 Note this is a *lower bound* — exact perceptual hashing does not catch rotated or cropped duplicates.
 
+**Update (embedding audit).** [`00_leakage_audit.ipynb`](notebooks/) clusters images by CNN embedding similarity and finds **41.2% redundancy**, not 12.9%. The author's augmentation was colour jitter, which a difference hash cannot see. Submissions 3 and 4 therefore use [`artifacts/clean_split_manifest.csv`](artifacts/), split over embedding clusters.
+
 This matters beyond tidiness. A 2025 standardized re-implementation study found that cricket shot models originally reporting 96%, 99.2% and 93% accuracy scored 46.0%, 55.6% and 57.7% when re-run under a consistent protocol ([Kang 2025](https://arxiv.org/abs/2510.09187)). Uncontrolled splits are a plausible contributor.
 
 ---
@@ -68,7 +71,8 @@ This matters beyond tidiness. A 2025 standardized re-implementation study found 
 |---|---|---|---|
 | 1 | Dataset, EDA, related work | [`01_eda_and_related_work.ipynb`](notebooks/) | ✅ Complete |
 | 2 | 3+ pretrained models, frozen vs fine-tuned | [`02_pretrained_models.ipynb`](notebooks/) | ✅ Complete |
-| 3 | Custom CNN from scratch | `03_custom_cnn.ipynb` | ⚪ Not started |
+| 0 | Leakage audit (embedding clustering, clean split) | [`00_leakage_audit.ipynb`](notebooks/) | ✅ Complete |
+| 3 | Custom CNN from scratch | [`03_custom_cnn.ipynb`](notebooks/) | ✅ Complete |
 | 4 | CNN + CBAM attention | `04_cnn_with_attention.ipynb` | ⚪ Not started |
 
 From Submission 2 onward, every notebook reports accuracy, precision, recall, F1, a confusion matrix, and training/testing time.
@@ -87,8 +91,10 @@ From Submission 2 onward, every notebook reports accuracy, precision, recall, F1
 | ResNet50 | frozen | 0.9750 | 0.9752 | 40 | 12.0 m | 9.72 |
 | EfficientNetB0 | frozen | 0.9598 | 0.9602 | 40 | 6.6 m | 9.18 |
 | DenseNet121 | frozen | 0.9098 | 0.9103 | 40 | 13.3 m | 16.47 |
-| Custom CNN | scratch | — | — | — | — | — |
-| Custom CNN + CBAM | scratch | — | — | — | — | — |
+| **Custom CNN** | **from scratch** | **0.8514** | **0.8515** | 50 | 29.9 m | 2.93 |
+| Custom CNN + CBAM | from scratch | — | — | — | — | — |
+
+⚠️ **The Custom CNN row is measured on the clean split; every row above it is on the contaminated split.** They are not directly comparable — see [`reports/Submission3_Report.pdf`](reports/Submission3_Report.pdf).
 
 Fine-tuning improved macro F1 for all three backbones, mean **+0.0478**. No run overfit.
 
@@ -96,21 +102,53 @@ Fine-tuning improved macro F1 for all three backbones, mean **+0.0478**. No run 
 
 ![Training curves](results/figures/01_training_curves.png)
 
-> ### ⚠️ These accuracies are inflated
+> ### ⚠️ The pretrained accuracies are inflated — this is now measured, not suspected
 >
-> The dataset author states the images were augmented before release. The exact-hash
-> deduplication in Submission 1 removed 608 identical copies (12.9%), but a **rotated or
-> cropped** copy produces a completely different hash and was not caught — so those
-> variants are still split across train and test.
+> An embedding-based audit ([`00_leakage_audit.ipynb`](notebooks/)) found that the
+> dataset author's augmentation was **colour jitter**, which perceptual hashing cannot
+> detect. One photograph appears **73 times**.
 >
-> Supporting evidence: DenseNet121 **frozen** reached 91.0% with only 4,100 trainable
-> parameters. A linear probe on fixed ImageNet features cannot learn anything
-> cricket-specific; reaching 91% means test images sit very close to training images in
-> feature space.
+> | | |
+> |---|---|
+> | Raw files | 4,724 |
+> | Exact-hash groups (Submission 1) | 4,116 — 12.9% redundant |
+> | **Embedding clusters (cos ≥ 0.95)** | **2,777 — 41.2% redundant** |
+> | Clusters spanning two classes | 0 |
+> | **Submission 2 test images contaminated** | **331 of 721 = 45.9%** |
 >
-> An embedding-based similarity audit is the next step. The *relative* findings
-> (fine-tuning effect, hardest/easiest class, timings) are unaffected; the *absolute*
-> numbers should not be quoted without this caveat.
+> ![Duplicate clusters](results/figures/cluster_grids.png)
+>
+> Each row above is one photograph under different colour transformations.
+>
+> Supporting evidence from Submission 2: DenseNet121 **frozen** reached 91.0% with only
+> 4,100 trainable parameters, which a linear probe on fixed ImageNet features could only
+> do if test images sit very close to training images in feature space.
+>
+> Submissions 3 and 4 use the corrected split from `artifacts/clean_split_manifest.csv`.
+> Contamination is proven and large, but with only 2 errors in 721 predictions it does
+> not by itself explain Submission 2's 99.7% — see the report for the honest limits of
+> that conclusion.
+
+### Submission 3 — custom CNN from scratch
+
+Four conv blocks, 1,206,756 trainable parameters, 50 epochs on the clean split.
+
+| | |
+|---|---|
+| Test accuracy | **0.8514** |
+| Macro F1 | **0.8515** |
+| Train–val gap | +0.0042 (no overfitting) |
+| Best epoch | 50 of 50 — **still improving at the budget limit** |
+
+![Submission 3 curves](results/figures/06_s3_curves.png)
+
+**The per-class ordering matches Submission 2's mean ordering** — sweep easiest, then
+pullshot, legglance-flick, drive — across four architectures and two splits, which points
+to a property of the data rather than of any model.
+
+**The hardest pair is `drive` ↔ `legglance-flick` (40 of 99 errors),** confirming the
+visual prediction made in Submission 1. Submission 2's best model made only 2 errors, too
+few to identify a hardest pair.
 
 ---
 
@@ -123,19 +161,22 @@ cricket-shot-attention-cnn/
 ├── requirements.txt
 ├── .gitignore
 ├── notebooks/
+│   ├── 00_leakage_audit.ipynb
 │   ├── 01_eda_and_related_work.ipynb
 │   ├── 02_pretrained_models.ipynb
-│   ├── 03_custom_cnn.ipynb          # planned
+│   ├── 03_custom_cnn.ipynb
 │   └── 04_cnn_with_attention.ipynb  # planned
 ├── artifacts/
-│   ├── split_manifest.csv        # frozen split — written by notebook 01, do not regenerate
+│   ├── split_manifest.csv        # hash-grouped split (Submissions 1–2)
+│   ├── clean_split_manifest.csv  # embedding-cluster split (Submissions 3–4) — do not regenerate
 │   ├── submission2_results.csv
-│   └── submission2_per_class_f1.csv
+│   ├── submission2_per_class_f1.csv
+│   ├── submission3_results.csv
+│   └── submission3_per_class.csv
 ├── reports/
-│   ├── Submission1_Report.pdf
-│   ├── Submission1_Report.tex
-│   ├── Submission2_Report.pdf
-│   ├── Submission2_Report.tex
+│   ├── Submission1_Report.pdf / .tex
+│   ├── Submission2_Report.pdf / .tex
+│   ├── Submission3_Report.pdf / .tex
 │   └── figures/                  # sample frames used in the report
 └── results/
     └── figures/                  # Submission 2+ plots
@@ -147,7 +188,7 @@ cricket-shot-attention-cnn/
 
 1. Open a notebook from `notebooks/` on Kaggle (File → Import Notebook → GitHub link).
 2. Add the dataset as an input: **+ Add Input** → `aneesh10/cricket-shot-dataset`.
-3. **Run All.** No extra installs needed. Notebook 02 trains six CNNs, so turn on a GPU first (Settings → Accelerator → GPU T4); it takes about 80 minutes.
+3. **Run All.** No extra installs needed. Notebook 02 trains six CNNs, so turn on a GPU first (Settings → Accelerator → GPU T4); it takes about 80 minutes. Notebook 03 takes about 30 minutes on a GPU and also needs `artifacts/clean_split_manifest.csv` added as an input.
 
 To run locally instead, `pip install -r requirements.txt` and set `DATA_DIR` to the dataset's `data/` folder.
 

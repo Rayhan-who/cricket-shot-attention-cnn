@@ -1,0 +1,5 @@
+class,precision,recall,f1,support
+drive,0.767,0.7759,0.7714,174
+legglance-flick,0.8788,0.8056,0.8406,180
+pullshot,0.8345,0.8897,0.8612,136
+sweep,0.9222,0.9432,0.9326,176

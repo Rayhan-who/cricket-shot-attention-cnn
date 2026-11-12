@@ -1,0 +1,2 @@
+model,mode,split,accuracy,precision,recall,macro_F1,f1_weighted,epochs,train_min,test_s,ms/img,trainable,overfit_gap
+Custom CNN,from scratch,clean (embedding clusters),0.8514,0.8506,0.8536,0.8515,0.851,50,29.8673,1.95,2.93,1206756,0.0042
