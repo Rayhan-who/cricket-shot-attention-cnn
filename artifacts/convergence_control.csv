@@ -1,0 +1,2 @@
+model,budget,epochs_ran,accuracy,macro_F1,train_min,verdict
+Baseline CNN,120,120,0.964,0.9639,70.6,CONVERGENCE SPEED

@@ -1,0 +1,5 @@
+class,baseline_F1,cbam_F1,change
+drive,0.8306,0.9801,0.1495
+legglance-flick,0.829,0.9831,0.1542
+pullshot,0.8669,0.9852,0.1183
+sweep,0.9106,0.9859,0.0753

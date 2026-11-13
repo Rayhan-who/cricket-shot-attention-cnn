@@ -1,0 +1,3 @@
+model,seed,accuracy,precision,recall,macro_F1,epochs,train_min,test_s,ms_per_img,trainable,overfit_gap
+Baseline CNN,42,0.8589,0.8629,0.8581,0.8593,50,29.2806,2.2032,3.308,1206756,-0.0163
+CNN + CBAM,42,0.9835,0.9841,0.9832,0.9836,50,38.9728,2.7377,4.1107,1229452,0.008

@@ -2,8 +2,8 @@
 
 Fine-grained classification of cricket batting shots from **single frames** — pretrained CNNs, a custom CNN trained from scratch, and a CBAM attention variant, evaluated under a leakage-controlled protocol.
 
-![status](https://img.shields.io/badge/status-in%20progress-orange)
-![submission](https://img.shields.io/badge/submission-3%20of%204-blue)
+![status](https://img.shields.io/badge/status-complete-green)
+![submission](https://img.shields.io/badge/submissions-4%20of%204-blue)
 ![license](https://img.shields.io/badge/code-MIT-green)
 
 ---
@@ -73,7 +73,8 @@ This matters beyond tidiness. A 2025 standardized re-implementation study found 
 | 2 | 3+ pretrained models, frozen vs fine-tuned | [`02_pretrained_models.ipynb`](notebooks/) | ✅ Complete |
 | 0 | Leakage audit (embedding clustering, clean split) | [`00_leakage_audit.ipynb`](notebooks/) | ✅ Complete |
 | 3 | Custom CNN from scratch | [`03_custom_cnn.ipynb`](notebooks/) | ✅ Complete |
-| 4 | CNN + CBAM attention | `04_cnn_with_attention.ipynb` | ⚪ Not started |
+| 4 | CNN + CBAM attention | [`04_cnn_attention.ipynb`](notebooks/) | ✅ Complete |
+| — | Convergence control (supplementary) | [`05_convergence_control.ipynb`](notebooks/) | ✅ Complete |
 
 From Submission 2 onward, every notebook reports accuracy, precision, recall, F1, a confusion matrix, and training/testing time.
 
@@ -92,9 +93,11 @@ From Submission 2 onward, every notebook reports accuracy, precision, recall, F1
 | EfficientNetB0 | frozen | 0.9598 | 0.9602 | 40 | 6.6 m | 9.18 |
 | DenseNet121 | frozen | 0.9098 | 0.9103 | 40 | 13.3 m | 16.47 |
 | **Custom CNN** | **from scratch** | **0.8514** | **0.8515** | 50 | 29.9 m | 2.93 |
-| Custom CNN + CBAM | from scratch | — | — | — | — | — |
+| Custom CNN (S4 baseline) | from scratch | 0.8589 | 0.8593 | 50 | 29.3 m | 3.31 |
+| Custom CNN, 120 epochs | from scratch | 0.9640 | 0.9639 | 120 | 70.6 m | 3.31 |
+| **Custom CNN + CBAM** | **from scratch** | **0.9835** | **0.9836** | 50 | 39.0 m | 4.11 |
 
-⚠️ **The Custom CNN row is measured on the clean split; every row above it is on the contaminated split.** They are not directly comparable — see [`reports/Submission3_Report.pdf`](reports/Submission3_Report.pdf).
+⚠️ **The Custom CNN rows are measured on the clean split; the pretrained rows above them are on the contaminated split.** They are not directly comparable — see [`reports/Submission3_Report.pdf`](reports/Submission3_Report.pdf).
 
 Fine-tuning improved macro F1 for all three backbones, mean **+0.0478**. No run overfit.
 
@@ -150,6 +153,75 @@ to a property of the data rather than of any model.
 visual prediction made in Submission 1. Submission 2's best model made only 2 errors, too
 few to identify a hardest pair.
 
+### Submission 4 — attention, and what the gain measures
+
+CBAM added to each of the four conv blocks. Nothing else changed: same split, same
+seed, same hyperparameters, same 50-epoch budget.
+
+| | Baseline | + CBAM | Change |
+|---|---|---|---|
+| Accuracy | 0.8589 | **0.9835** | +0.1246 |
+| Macro F1 | 0.8593 | **0.9836** | +0.1243 |
+| Errors (of 666) | 94 | 11 | −83 |
+| Trainable parameters | 1,206,756 | 1,229,452 | +22,696 (+1.9%) |
+| Training time | 29.3 m | 39.0 m | +9.7 m |
+
+The gain of 12.43 pp clears the 3.04 pp detection threshold by a factor of four, and most
+of it lands on the pairs Submission 3 identified as hard: `drive`↔`legglance-flick`
+31→3, `drive`↔`pullshot` 22→3, `legglance-flick`↔`pullshot` 9→0.
+
+![Submission 4 curves](results/figures/09_s4_curves.png)
+
+#### ⚠️ Most of that gain was convergence speed, not capacity
+
+The curves above show one converged model and one that ran out of epochs. CBAM
+plateaus near epoch 30; the baseline is still climbing at 50, with a train−val
+accuracy gap of **−0.0163**, which is underfitting rather than a model that has learned
+all it can.
+
+[`05_convergence_control.ipynb`](notebooks/) retrains **the baseline only** with a
+120-epoch budget, with the verdict rule fixed before the run.
+
+| | Macro F1 | Epochs | Wall clock | Errors |
+|---|---|---|---|---|
+| Baseline, 50 epochs | 0.8593 | 50 | 29.3 m | 94 |
+| Baseline, 120 epochs | **0.9639** | 120 | 70.6 m | 24 |
+| CNN + CBAM, 50 epochs | 0.9836 | 50 | 39.0 m | 11 |
+
+![Convergence control](results/figures/11_convergence_control.png)
+
+**The baseline recovered 10.46 of the 12.43 pp — 84% of the gain.** The residual
+1.97 pp falls below the 3.04 pp threshold, so this experiment cannot resolve it.
+
+The supported claim is therefore about efficiency, not accuracy:
+
+> Under a fixed 50-epoch budget CBAM improves macro F1 by 12.43 pp. That improvement is
+> predominantly faster convergence: CBAM reaches equivalent accuracy in 39.0 minutes
+> where the unmodified baseline requires 70.6. This experiment finds no evidence that
+> attention raises the achievable ceiling of this architecture.
+
+Early stopping never fired in the 120-epoch run, but `ReduceLROnPlateau` annealed the
+learning rate from 1e-3 to 8.1e-6 and the best validation loss came at epoch 112, so the
+run is converged in the sense that matters.
+
+#### A note on run-to-run variation
+
+The Submission 3 run and the Submission 4 baseline are the same architecture, split,
+seed and budget, yet scored 0.8515 and 0.8593 macro F1 — a spread of **0.78 pp** from
+GPU non-determinism alone. That is close to the 0.70 pp run-to-run term assumed in the
+significance threshold, and a reminder that single-seed differences under ~3 pp should
+not be over-read.
+
+#### Grad-CAM is not conclusive
+
+![Grad-CAM](results/figures/14_s4_gradcam.png)
+
+Four corrected images were inspected in the notebook (two are shown above). CBAM
+tightened onto the batsman in some and attended to crowd and hoardings in others while
+still classifying correctly. All 88 corrected images were not scored, so no proportion
+is claimed. "Attention suppresses background" is not a sufficient account of the
+mechanism.
+
 ---
 
 ## Repository layout
@@ -165,14 +237,18 @@ cricket-shot-attention-cnn/
 │   ├── 01_eda_and_related_work.ipynb
 │   ├── 02_pretrained_models.ipynb
 │   ├── 03_custom_cnn.ipynb
-│   └── 04_cnn_with_attention.ipynb  # planned
+│   ├── 04_cnn_attention.ipynb
+│   └── 05_convergence_control.ipynb  # supplementary to Submission 4
 ├── artifacts/
 │   ├── split_manifest.csv        # hash-grouped split (Submissions 1–2)
 │   ├── clean_split_manifest.csv  # embedding-cluster split (Submissions 3–4) — do not regenerate
 │   ├── submission2_results.csv
 │   ├── submission2_per_class_f1.csv
 │   ├── submission3_results.csv
-│   └── submission3_per_class.csv
+│   ├── submission3_per_class.csv
+│   ├── submission4_results.csv
+│   ├── submission4_per_class.csv
+│   └── convergence_control.{csv,json}
 ├── reports/
 │   ├── Submission1_Report.pdf / .tex
 │   ├── Submission2_Report.pdf / .tex
@@ -188,7 +264,7 @@ cricket-shot-attention-cnn/
 
 1. Open a notebook from `notebooks/` on Kaggle (File → Import Notebook → GitHub link).
 2. Add the dataset as an input: **+ Add Input** → `aneesh10/cricket-shot-dataset`.
-3. **Run All.** No extra installs needed. Notebook 02 trains six CNNs, so turn on a GPU first (Settings → Accelerator → GPU T4); it takes about 80 minutes. Notebook 03 takes about 30 minutes on a GPU and also needs `artifacts/clean_split_manifest.csv` added as an input.
+3. **Run All.** No extra installs needed. Notebook 02 trains six CNNs, so turn on a GPU first (Settings → Accelerator → GPU T4); it takes about 80 minutes. Notebooks 03–05 also need `artifacts/clean_split_manifest.csv` added as an input; on a GPU they take about 30, 70 and 75 minutes.
 
 To run locally instead, `pip install -r requirements.txt` and set `DATA_DIR` to the dataset's `data/` folder.
 
