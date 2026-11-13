@@ -53,13 +53,13 @@ This repository controls for it:
 1. A 64-bit perceptual difference hash (dHash) is computed for every image.
 2. Images sharing a hash are collected into **duplicate groups**.
 3. The train/val/test split is made over *groups*, stratified by class — never over individual files.
-4. The resulting split is frozen to [`artifacts/split_manifest.csv`](artifacts/) and reused unchanged by every later submission.
+4. The resulting split is frozen to [`results-data/split_manifest.csv`](results-data/) and reused unchanged by every later submission.
 
 **Measured result:** 345 duplicate groups covering 953 images; **608 redundant copies (12.9%)**; largest group holds 10 copies of one photograph; zero groups span more than one class. Effective dataset size is 4,116, not 4,724. Estimated accuracy inflation under a naive split: 2–3 percentage points.
 
 Note this is a *lower bound* — exact perceptual hashing does not catch rotated or cropped duplicates.
 
-**Update (embedding audit).** [`00_leakage_audit.ipynb`](notebooks/) clusters images by CNN embedding similarity and finds **41.2% redundancy**, not 12.9%. The author's augmentation was colour jitter, which a difference hash cannot see. Submissions 3 and 4 therefore use [`artifacts/clean_split_manifest.csv`](artifacts/), split over embedding clusters.
+**Update (embedding audit).** [`00_leakage_audit.ipynb`](notebooks/) clusters images by CNN embedding similarity and finds **41.2% redundancy**, not 12.9%. The author's augmentation was colour jitter, which a difference hash cannot see. Submissions 3 and 4 therefore use [`results-data/clean_split_manifest.csv`](results-data/), split over embedding clusters.
 
 This matters beyond tidiness. A 2025 standardized re-implementation study found that cricket shot models originally reporting 96%, 99.2% and 93% accuracy scored 46.0%, 55.6% and 57.7% when re-run under a consistent protocol ([Kang 2025](https://arxiv.org/abs/2510.09187)). Uncontrolled splits are a plausible contributor.
 
@@ -127,7 +127,7 @@ Fine-tuning improved macro F1 for all three backbones, mean **+0.0478**. No run 
 > 4,100 trainable parameters, which a linear probe on fixed ImageNet features could only
 > do if test images sit very close to training images in feature space.
 >
-> Submissions 3 and 4 use the corrected split from `artifacts/clean_split_manifest.csv`.
+> Submissions 3 and 4 use the corrected split from `results-data/clean_split_manifest.csv`.
 > Contamination is proven and large, but with only 2 errors in 721 predictions it does
 > not by itself explain Submission 2's 99.7% — see the report for the honest limits of
 > that conclusion.
@@ -239,7 +239,7 @@ cricket-shot-attention-cnn/
 │   ├── 03_custom_cnn.ipynb
 │   ├── 04_cnn_attention.ipynb
 │   └── 05_convergence_control.ipynb  # supplementary to Submission 4
-├── artifacts/
+├── results-data/
 │   ├── split_manifest.csv        # hash-grouped split (Submissions 1–2)
 │   ├── clean_split_manifest.csv  # embedding-cluster split (Submissions 3–4) — do not regenerate
 │   ├── submission2_results.csv
@@ -264,7 +264,7 @@ cricket-shot-attention-cnn/
 
 1. Open a notebook from `notebooks/` on Kaggle (File → Import Notebook → GitHub link).
 2. Add the dataset as an input: **+ Add Input** → `aneesh10/cricket-shot-dataset`.
-3. **Run All.** No extra installs needed. Notebook 02 trains six CNNs, so turn on a GPU first (Settings → Accelerator → GPU T4); it takes about 80 minutes. Notebooks 03–05 also need `artifacts/clean_split_manifest.csv` added as an input; on a GPU they take about 30, 70 and 75 minutes.
+3. **Run All.** No extra installs needed. Notebook 02 trains six CNNs, so turn on a GPU first (Settings → Accelerator → GPU T4); it takes about 80 minutes. Notebooks 03–05 also need `results-data/clean_split_manifest.csv` added as an input; on a GPU they take about 30, 70 and 75 minutes.
 
 To run locally instead, `pip install -r requirements.txt` and set `DATA_DIR` to the dataset's `data/` folder.
 

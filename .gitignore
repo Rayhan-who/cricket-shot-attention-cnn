@@ -58,5 +58,5 @@ desktop.ini
 *~
 
 # ---- Keep these ---------------------------------------------------------
-# artifacts/split_manifest.csv is intentionally NOT ignored.
+# results-data/split_manifest.csv is intentionally NOT ignored.
 # It is small, and it is what makes Submissions 2-4 comparable.
