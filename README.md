@@ -8,9 +8,9 @@ Fine-grained classification of cricket batting shots from **single frames** — 
 
 ---
 
-## Final paper
+## Final report
 
-📄 **[Attention Speeds Up Convergence: A Controlled Study of CNN-Based Cricket Shot Classification](final-paper/Cricket_Shot_CNN_Final_Paper.pdf)**
+📄 **[Attention Speeds Up Convergence: A Controlled Study of CNN-Based Cricket Shot Classification](final-report/Cricket_Shot_CNN_Final_Paper.pdf)**
 
 Rayhanul Islam, Fardeen Mohammad Fuad, Shamiha Reza Rami, Fariha Maisha — Department of Computer Science, East West University, Dhaka.
 
@@ -245,7 +245,7 @@ cricket-shot-attention-cnn/
 ├── LICENSE
 ├── requirements.txt
 ├── .gitignore
-├── final-paper/
+├── final-report/
 │   └── Cricket_Shot_CNN_Final_Paper.pdf
 ├── notebooks/
 │   ├── 00_leakage_audit.ipynb
