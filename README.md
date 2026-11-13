@@ -8,6 +8,19 @@ Fine-grained classification of cricket batting shots from **single frames** — 
 
 ---
 
+## Final paper
+
+📄 **[Attention Speeds Up Convergence: A Controlled Study of CNN-Based Cricket Shot Classification](final-paper/Cricket_Shot_CNN_Final_Paper.pdf)**
+
+Rayhanul Islam, Fardeen Mohammad Fuad, Shamiha Reza Rami, Fariha Maisha — Department of Computer Science, East West University, Dhaka.
+
+The paper brings the four submissions together around two findings:
+
+- **Leakage audit.** Embedding clustering shows the public corpus is 41.2% redundant, where perceptual hashing reported 12.9%. The dataset's own colour-jitter augmentation is invisible to difference hashing, and 45.9% of the earlier test images had a near-duplicate in training.
+- **Convergence control.** CBAM raises macro F1 from 0.8593 to 0.9836 under a shared 50-epoch budget, but the baseline alone reaches 0.9639 with 120 epochs. That recovers 84% of the gain, so the result is reported as faster convergence (39.0 vs 70.6 minutes), not a higher ceiling.
+
+---
+
 ## Problem
 
 Given one still frame of a batsman mid-stroke, predict which of four batting shots is being played:
@@ -232,6 +245,8 @@ cricket-shot-attention-cnn/
 ├── LICENSE
 ├── requirements.txt
 ├── .gitignore
+├── final-paper/
+│   └── Cricket_Shot_CNN_Final_Paper.pdf
 ├── notebooks/
 │   ├── 00_leakage_audit.ipynb
 │   ├── 01_eda_and_related_work.ipynb
@@ -253,6 +268,7 @@ cricket-shot-attention-cnn/
 │   ├── Submission1_Report.pdf / .tex
 │   ├── Submission2_Report.pdf / .tex
 │   ├── Submission3_Report.pdf / .tex
+│   ├── Submission4_Report.pdf
 │   └── figures/                  # sample frames used in the report
 └── results/
     └── figures/                  # Submission 2+ plots
