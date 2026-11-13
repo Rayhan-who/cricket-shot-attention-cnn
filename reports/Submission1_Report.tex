@@ -583,11 +583,11 @@ addresses.
   & Cricket shot video dataset
   & CNN$+$RNN, attention network, ViT
   & Direct comparison of three deep learning paradigms on one dataset
-  & 99.2\% (CNN$+$RNN), 99.19\% (attention), 98.9\% (ViT) --- not reproduced by the independent re-implementation in row 2 \\
+  & Reported accuracies not reproduced by the independent re-implementation in row 2 \\
 \addlinespace
 
 6 & Islam, Hassan \& Khan (2019), \textit{arXiv:1909.01228}~\cite{islam2019}
-  & BowlersNet (own; 8{,}100 \textbf{images}, 18 bowlers)
+  & Own dataset; 18 bowlers from 7 nations
   & VGG16 $+$ transfer learning
   & Single-frame image classification of cricket bowling actions; selective layer freezing
   & 93.3\% average test accuracy \\
@@ -617,8 +617,8 @@ it should be cited when presenting this project's own results.
 \end{keybox}
 
 {\footnotesize\color{muted}\textit{Note:} citations in rows 4 and 5 of the table above
-are reported via the survey in \cite{kang2025}; the original publications are not
-openly indexed, so their figures are as reported there.}
+are reported via the survey in \cite{kang2025}. Locate and verify the original
+publications through your institution's library before final submission.}
 
 \textbf{3. Attention appears, but is never isolated.} Row 5 reports an attention-based
 network, but introduces it alongside other architectural changes, so the contribution of
@@ -641,7 +641,6 @@ Random seed & 42 \\
 Input resolution & $224 \times 224$ \\
 Normalisation & ImageNet channel statistics \\
 Reported metrics & Accuracy, precision, recall, F1 (per class and macro), confusion matrix, training and testing time \\
-Split source & \texttt{results-data/split\_manifest.csv} --- loaded, never regenerated \\
 \bottomrule
 \end{tabularx}
 
@@ -656,19 +655,6 @@ Split source & \texttt{results-data/split\_manifest.csv} --- loaded, never regen
 4 & CNN with attention & The Submission 3 architecture with a CBAM module inserted after each convolutional block. Nothing else changes. Grad-CAM comparison of where each model attends \\
 \bottomrule
 \end{tabularx}
-
-% ========================================================================
-\section{Submission checklist}
-
-\begin{enumerate}[label=$\square$\ ,leftmargin=2em]
-\item Dataset added as a notebook input; \texttt{DATA\_DIR} resolves without error
-\item Notebook executed with \textbf{Restart \& Run All}, so all plots and tables are stored in the \texttt{.ipynb}
-\item Licence and year filled in from the Kaggle page
-\item Confusion pair in Finding 3 confirmed against the Section 2.2 sample grid
-\item \texttt{results-data/split\_manifest.csv} generated and committed
-\item Reference links verified against the original publications
-\item Notebook pushed to GitHub with outputs visible; repository link submitted
-\end{enumerate}
 
 % ========================================================================
 \begin{thebibliography}{9}
